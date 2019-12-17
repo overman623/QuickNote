@@ -2,7 +2,6 @@ package com.makestorming.quicknote
 
 import android.content.Intent
 import android.os.Bundle
-import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
@@ -19,16 +18,19 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        fab.setOnClickListener { view ->
+        fab.setOnClickListener {
             startActivity(Intent(this, MemoActivity::class.java))
         }
 
-        var textItems : MutableList<TextListData> = mutableListOf(TextListData(0,"date1", "Title1"),
+        val textItems : MutableList<TextListData> = mutableListOf(TextListData(0,"date1", "Title1"),
             TextListData(0,"date2", "Title2"),TextListData(0,"date3", "Title3"))
 
-        val mAdapter = TextListAdapter(this, textItems)
+        val mAdapter = TextListAdapter(textItems, object : TextListAdapter.Callback{
+            override fun getAction(item : TextListData?) {
+                openWriteActivity(item)
+            }
+        })
         textViewList.adapter = mAdapter
-
         val lm = LinearLayoutManager(this)
         textViewList.layoutManager = lm
         textViewList.setHasFixedSize(true)
@@ -51,6 +53,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun openWriteActivity(item : TextListData?) {
+        val intent = Intent(this, MemoActivity::class.java)
+        item?.let {
+            intent.putExtra("TITLE", item.title)
+            intent.putExtra("DATE", item.date)
+            intent.putExtra("ORDER", item.order)
+        }
+        startActivity(intent)
+    }
 
 
 }

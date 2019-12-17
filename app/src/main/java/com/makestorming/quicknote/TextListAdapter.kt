@@ -1,15 +1,14 @@
 package com.makestorming.quicknote
 
-import android.content.Context
 import android.graphics.Color
+import android.graphics.ColorSpace
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.layout_text_item.view.*
-import kotlin.concurrent.fixedRateTimer
 
-class TextListAdapter(private val context: Context, items: MutableList<TextListData> ) : RecyclerView.Adapter<TextListAdapter.MainViewHolder>(){
+class TextListAdapter(items: MutableList<TextListData>, private val connector: Callback ) : RecyclerView.Adapter<TextListAdapter.MainViewHolder>(){
 
     private var items : MutableList<TextListData>? = items
 
@@ -21,18 +20,18 @@ class TextListAdapter(private val context: Context, items: MutableList<TextListD
     override fun getItemCount(): Int = items!!.size
 
     interface Callback{
-        fun getAction()
+        fun getAction(item : TextListData?)
     }
 
     override fun onBindViewHolder(holder: MainViewHolder, position: Int) {
         items?.get(position).let { item ->
             with(holder){
-                val title = itemView.textTitle
-                val date = itemView.textDate
-                title.text = item?.title
-                date.text = item?.date
-                itemView.setOnClickListener{ v->
-                    v.setBackgroundColor(Color.parseColor("#ff0000"))
+//                val title = itemView.textTitle
+//                val date = itemView.textDate
+                itemView.textTitle.text = item?.title
+                itemView.textDate.text = item?.date
+                itemView.setOnClickListener{
+                    connector.getAction(item)
                 }
             }
         }
