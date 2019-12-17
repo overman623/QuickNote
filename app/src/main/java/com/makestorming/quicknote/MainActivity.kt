@@ -19,17 +19,20 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         fab.setOnClickListener {
-            startActivity(Intent(this, MemoActivity::class.java))
+            openWriteActivity(null)
         }
 
         val textItems : MutableList<TextListData> = mutableListOf(TextListData(0,"date1", "Title1"),
             TextListData(0,"date2", "Title2"),TextListData(0,"date3", "Title3"))
+
+        if(textItems.size == 0) textCenter.text = getString(R.string.text_center)
 
         val mAdapter = TextListAdapter(textItems, object : TextListAdapter.Callback{
             override fun getAction(item : TextListData?) {
                 openWriteActivity(item)
             }
         })
+
         textViewList.adapter = mAdapter
         val lm = LinearLayoutManager(this)
         textViewList.layoutManager = lm
