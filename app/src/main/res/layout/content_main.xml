@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#FFEB3B"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".MainActivity"
     tools:showIn="@layout/activity_main">
@@ -13,16 +14,14 @@
         android:id="@+id/centerText"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="hello world!"
         android:gravity="center"
-        />
-
+        android:text="hello world!" />
 
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/textViewList"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
