@@ -8,6 +8,7 @@ import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_memo.*
 import kotlinx.android.synthetic.main.content_memo.*
+import java.io.File
 
 
 class MemoActivity : AppCompatActivity() {
@@ -17,6 +18,8 @@ class MemoActivity : AppCompatActivity() {
     private var text : String? = ""
     private var order : Int = 0
 
+    private var dialogSave : DialogSetting? = null
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_memo)
@@ -31,7 +34,10 @@ class MemoActivity : AppCompatActivity() {
         text = if(text == null) "" else text
 
         fab.setOnClickListener {
-            saveText()
+            title?.let{
+                //show dialog : would you save the text
+                saveText()
+            }
             //toast
         }
 
@@ -67,34 +73,37 @@ class MemoActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-
-        Log.d("MemoActivity", editText.text.toString())
-
-/*
-        val data = when(editText.text.toString()){
-            text -> true
-            else -> false
-        }
-*/
-
-//        editText.text.toString().equals(text)
-
         if(editText.text.toString() == text){
             Log.d("MemoActivity", "if")
             //show dialog : would you save the text
+            saveText()
             super.onBackPressed()
         }else{
             Log.d("MemoActivity", "else")
             //dialog save text
         }
-
     }
 
-    private fun saveText(){
+    private fun showDialogSave(){
+        dialogSave = DialogSetting(this)
+    }
+
+    private fun saveText() : Boolean{
         //use title, date, order
 //        Environment.getExternalStorageDirectory().getAbsolutePath()
-        Log.d("MemoActivity", Environment.getDataDirectory().absolutePath)
-//        val file : File = File.createTempFile()
+
+        //title null
+
+        val file = File(Environment.getDownloadCacheDirectory().absolutePath
+                + File.separator + title + ".txt")
+        if(file.exists()){
+            //file update
+            Log.d("MemoActivity", "exist")
+        }else{
+            //file insert
+            Log.d("MemoActivity", "exist not")
+        }
+        return false
     }
 
 
