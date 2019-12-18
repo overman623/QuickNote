@@ -22,8 +22,8 @@ class MainActivity : AppCompatActivity() {
             openWriteActivity(null)
         }
 
-        val textItems : MutableList<TextListData> = mutableListOf(TextListData(0,"date1", "Title1"),
-            TextListData(0,"date2", "Title2"),TextListData(0,"date3", "Title3"))
+        val textItems : MutableList<TextListData> = mutableListOf(TextListData(0,"date1", "Title1", "Text1"),
+            TextListData(0,"date2", "Title2", "Text2"),TextListData(0,"date3", "Title3", "Text3"))
 
         if(textItems.size == 0) textCenter.text = getString(R.string.text_center)
 
@@ -58,12 +58,14 @@ class MainActivity : AppCompatActivity() {
 
     fun openWriteActivity(item : TextListData?) {
         val intent = Intent(this, MemoActivity::class.java)
-        item?.let {
-            intent.putExtra("TITLE", item.title)
-            intent.putExtra("DATE", item.date)
-            intent.putExtra("ORDER", item.order)
-        }
-        startActivity(intent)
+        startActivity(intent.apply {
+            item?.let {
+                putExtra("TITLE", it.title)
+                putExtra("DATE", it.date)
+                putExtra("TEXT", it.text)
+                putExtra("ORDER", it.order)
+            }
+        })
     }
 
 

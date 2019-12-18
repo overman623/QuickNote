@@ -1,28 +1,41 @@
 package com.makestorming.quicknote
 
-import android.content.Context
 import android.os.Bundle
+import android.os.Environment
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
+import kotlinx.android.synthetic.main.activity_memo.*
 import kotlinx.android.synthetic.main.content_memo.*
 
 
 class MemoActivity : AppCompatActivity() {
 
     private var date : String? = null
-    private var title : String? = null
+    private var title : String? = ""
+    private var text : String? = ""
     private var order : Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_memo)
 
-        date = intent.getStringExtra("DATE")
-        title = intent.getStringExtra("TITLE")
-        order = intent.getIntExtra("ORDER", 0)
+        intent.apply {
+            date = getStringExtra("DATE")
+            title = getStringExtra("TITLE")
+            text = getStringExtra("TEXT")
+            order = getIntExtra("ORDER", 0)
+        }
 
+        text = if(text == null) "" else text
+
+        fab.setOnClickListener {
+            saveText()
+            //toast
+        }
+
+        editText.setText(text)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -45,7 +58,7 @@ class MemoActivity : AppCompatActivity() {
                 true
             }
             R.id.action_erase_all -> {
-                //erase field
+                editText.setText("")
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -53,11 +66,35 @@ class MemoActivity : AppCompatActivity() {
 
     }
 
-
     override fun onBackPressed() {
-        var before = editText.text.toString()
-        if(before == title) //show dialog : would you save the text
-        super.onBackPressed()
+
+        Log.d("MemoActivity", editText.text.toString())
+
+/*
+        val data = when(editText.text.toString()){
+            text -> true
+            else -> false
+        }
+*/
+
+//        editText.text.toString().equals(text)
+
+        if(editText.text.toString() == text){
+            Log.d("MemoActivity", "if")
+            //show dialog : would you save the text
+            super.onBackPressed()
+        }else{
+            Log.d("MemoActivity", "else")
+            //dialog save text
+        }
+
+    }
+
+    private fun saveText(){
+        //use title, date, order
+//        Environment.getExternalStorageDirectory().getAbsolutePath()
+        Log.d("MemoActivity", Environment.getDataDirectory().absolutePath)
+//        val file : File = File.createTempFile()
     }
 
 
