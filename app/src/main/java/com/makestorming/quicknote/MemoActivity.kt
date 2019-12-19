@@ -13,12 +13,14 @@ import java.io.File
 
 class MemoActivity : AppCompatActivity() {
 
+    val TAG = MemoActivity::class.java.name
+
     private var date : String? = null
     private var title : String? = ""
     private var text : String? = ""
     private var order : Int = 0
 
-    private var dialogSave : DialogSetting? = null
+
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,13 +33,14 @@ class MemoActivity : AppCompatActivity() {
             order = getIntExtra("ORDER", 0)
         }
 
-        text = if(text == null) "" else text
+        text = text?.let { it } ?: ""
+        title = title?.let { it } ?: "제목 없음"
+
+//        text = text?.let{text}.let{""}
+//        title = title?.let{title}.let{"제목없음"}
 
         fab.setOnClickListener {
-            title?.let{
-                //show dialog : would you save the text
-                saveText()
-            }
+            showDialogSave()
             //toast
         }
 
@@ -76,26 +79,33 @@ class MemoActivity : AppCompatActivity() {
         if(editText.text.toString() == text){
             Log.d("MemoActivity", "if")
             //show dialog : would you save the text
-            saveText()
             super.onBackPressed()
         }else{
+            showDialogSave()
             Log.d("MemoActivity", "else")
             //dialog save text
         }
     }
 
     private fun showDialogSave(){
-        dialogSave = DialogSetting(this)
+        DialogSave(this, title!!, object : DialogSave.Callback{
+            override fun getTitle(text: String?) {
+                saveText(text)
+            }
+        }).apply {
+            show()
+        }
+//        testCallback {
+//            Log.d(TAG, "main Method : " + it)
+//        }
     }
 
-    private fun saveText() : Boolean{
-        //use title, date, order
-//        Environment.getExternalStorageDirectory().getAbsolutePath()
 
-        //title null
+
+    private fun saveText(text: String?) : Boolean{
 
         val file = File(Environment.getDownloadCacheDirectory().absolutePath
-                + File.separator + title + ".txt")
+                + File.separator + text + ".txt")
         if(file.exists()){
             //file update
             Log.d("MemoActivity", "exist")
