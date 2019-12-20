@@ -19,8 +19,6 @@ class MemoActivity : AppCompatActivity() {
     private var title : String? = ""
     private var text : String? = ""
     private var order : Int = 0
-
-
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,22 +26,19 @@ class MemoActivity : AppCompatActivity() {
 
         intent.apply {
             date = getStringExtra("DATE")
-            title = getStringExtra("TITLE")
-            text = getStringExtra("TEXT")
+            title = getStringExtra("TITLE")?.let { it } ?: "제목 없음"
+            text = getStringExtra("TEXT")?.let { it } ?: ""
             order = getIntExtra("ORDER", 0)
         }
 
-        text = text?.let { it } ?: ""
-        title = title?.let { it } ?: "제목 없음"
 
-//        text = text?.let{text}.let{""}
-//        title = title?.let{title}.let{"제목없음"}
 
         fab.setOnClickListener {
             showDialogSave()
             //toast
         }
 
+        //title write
         editText.setText(text)
     }
 
@@ -90,30 +85,30 @@ class MemoActivity : AppCompatActivity() {
     private fun showDialogSave(){
         DialogSave(this, title!!, object : DialogSave.Callback{
             override fun getTitle(text: String?) {
-                saveText(text)
+                if(saveText(text, title)) finishAffinity() //true : activity close
+                else onBackPressed() //false : dialog close
             }
         }).apply {
             show()
         }
-//        testCallback {
-//            Log.d(TAG, "main Method : " + it)
-//        }
+
     }
 
+    private fun saveText(title: String?, beforeTitle: String?) : Boolean{
 
+        FileManager(title!!, beforeTitle!!).apply {
+            return when(makeFile(date, text, order)){
+                true -> {
 
-    private fun saveText(text: String?) : Boolean{
+                    true
+                }
+                else -> {
 
-        val file = File(Environment.getDownloadCacheDirectory().absolutePath
-                + File.separator + text + ".txt")
-        if(file.exists()){
-            //file update
-            Log.d("MemoActivity", "exist")
-        }else{
-            //file insert
-            Log.d("MemoActivity", "exist not")
+                    false
+                }
+            }
         }
-        return false
+
     }
 
 

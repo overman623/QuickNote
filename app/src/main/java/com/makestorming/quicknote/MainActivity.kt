@@ -2,6 +2,7 @@ package com.makestorming.quicknote
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
@@ -10,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,6 +24,20 @@ class MainActivity : AppCompatActivity() {
         fab.setOnClickListener {
             openWriteActivity(null)
         }
+
+        val textItems1 : MutableList<TextListData> = mutableListOf()
+        File(Environment.getDownloadCacheDirectory().absolutePath + File.separator + "memo")
+            .apply {
+                if(exists()){
+                    listFiles()?.forEach {
+                        textItems1.add(0, TextListData(0, "date", it.name))
+                        //date
+                        //order
+                    }
+                }else{
+                    mkdirs()
+                }
+            }
 
         val textItems : MutableList<TextListData> = mutableListOf(TextListData(0,"date1", "Title1", "Text1"),
             TextListData(0,"date2", "Title2", "Text2"),TextListData(0,"date3", "Title3", "Text3"))

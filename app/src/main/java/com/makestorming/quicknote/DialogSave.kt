@@ -35,9 +35,13 @@ class DialogSave(context: Context, val title : String, private val callback : Ca
 //        }
 
         editTitle.setText(title)
-
         buttonSave.setOnClickListener{
-            callback.getTitle(editTitle.text.toString())
+            editTitle.text.toString().let {
+                val matched = Regex(pattern = "^[^.\\\\/:*?\"<>|]?[^\\\\/:*?\"<>|]*").containsMatchIn(input = it)
+                if(matched) textAlert.text = "Memo title must not have \\/, :, *, ?, \\| "
+                else if (it.isEmpty() || it.isBlank()) textAlert.text = "Please input memo title "
+                else callback.getTitle(it)
+            }
         }
 
     }

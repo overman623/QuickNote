@@ -1,3 +1,6 @@
 package com.makestorming.quicknote
 
-data class TextListData(var order: Int,var date: String, var title: String = "", var text: String = "")
+data class TextListData(var order: Int,var date: String, var title: String = "", var text: String = ""){
+//    constructor(firstName: String) : this(firstName, "")
+
+}
