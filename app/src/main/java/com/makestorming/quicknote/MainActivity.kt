@@ -1,5 +1,6 @@
 package com.makestorming.quicknote
 
+import android.Manifest
 import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
@@ -7,6 +8,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 
 import kotlinx.android.synthetic.main.activity_main.*
@@ -14,33 +16,45 @@ import kotlinx.android.synthetic.main.content_main.*
 import java.io.File
 
 class MainActivity : AppCompatActivity() {
-
+    private val tag : String = MainActivity::class.java.simpleName
+    private val permissions : Array<String> = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
+        PermissionsChecker(this).apply {
+            if(lacksPermissions(permissions)){
+                ActivityCompat.requestPermissions(this@MainActivity, permissions, 1)
+            }
+        }
+
         fab.setOnClickListener {
             openWriteActivity(null)
         }
 
-        val textItems1 : MutableList<TextListData> = mutableListOf()
-        File(Environment.getDownloadCacheDirectory().absolutePath + File.separator + "memo")
+        val textItems : MutableList<TextListData> = mutableListOf()
+        File(Environment.getDownloadCacheDirectory().absolutePath +
+                File.separator + packageName + File.separator + "memo")
             .apply {
+                Log.d(tag, absolutePath)
                 if(exists()){
                     listFiles()?.forEach {
-                        textItems1.add(0, TextListData(0, "date", it.name))
+                        textItems.add(0, TextListData(0, "date", it.name))
                         //date
                         //order
                     }
+                    Log.d(tag, "exist folder")
                 }else{
-                    mkdirs()
+                    mkdir()
+                    Log.d(tag, "not exist folder")
                 }
             }
 
-        val textItems : MutableList<TextListData> = mutableListOf(TextListData(0,"date1", "Title1", "Text1"),
-            TextListData(0,"date2", "Title2", "Text2"),TextListData(0,"date3", "Title3", "Text3"))
+//        val textItems : MutableList<TextListData> = mutableListOf(TextListData(0,"date1", "Title1", "Text1"),
+//            TextListData(0,"date2", "Title2", "Text2"),TextListData(0,"date3", "Title3", "Text3"))
 
         if(textItems.size == 0) textCenter.text = getString(R.string.text_center)
 
