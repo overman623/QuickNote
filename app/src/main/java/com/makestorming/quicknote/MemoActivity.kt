@@ -26,7 +26,7 @@ class MemoActivity : AppCompatActivity() {
 
         intent.apply {
             date = getStringExtra("DATE")
-            title = getStringExtra("TITLE")?.let { it } ?: "제목 없음"
+            title = getStringExtra("TITLE")?.let { it } ?: ""
             text = getStringExtra("TEXT")?.let { it } ?: ""
             order = getIntExtra("ORDER", 0)
         }
@@ -34,7 +34,7 @@ class MemoActivity : AppCompatActivity() {
 
 
         fab.setOnClickListener {
-            showDialogSave()
+            showDialogSave(false)
             //toast
         }
 
@@ -76,18 +76,24 @@ class MemoActivity : AppCompatActivity() {
             //show dialog : would you save the text
             super.onBackPressed()
         }else{
-            showDialogSave()
+            showDialogSave(true)
             Log.d("MemoActivity", "else")
             //dialog save text
         }
     }
 
-    private fun showDialogSave(){
-        DialogSave(this, title!!, object : DialogSave.Callback{
+    private fun showDialogSave(isExit : Boolean){
+        DialogSave(this, title!!, isExit, object : DialogSave.Callback{
             override fun getTitle(text: String?) {
-                if(saveText(text, title)) finishAffinity() //true : activity close
-                else onBackPressed() //false : dialog close
+                if(saveText(text, title)) { //true : activity close
+                    this@MemoActivity.finish()
+                }
             }
+
+            override fun exit(dialog: DialogSave) {
+                this@MemoActivity.finish()
+            }
+
         }).apply {
             show()
         }

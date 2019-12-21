@@ -5,9 +5,10 @@ import android.util.Log
 import java.io.*
 
 
-class FileManager(title: String, private val beforeTitle: String = "") {
+class FileManager(var title: String, private val beforeTitle: String = "") {
 
-    private val mainPath = Environment.getDownloadCacheDirectory().absolutePath + File.separator + "memo"
+    private val mainPath = Environment.getDataDirectory().absolutePath +
+            "/data/com.makestorming.quicknote/memo"
     private val mainFile = File(mainPath + File.separator + "$title.txt")
 
 
@@ -22,6 +23,8 @@ class FileManager(title: String, private val beforeTitle: String = "") {
         if(oldFile.exists()){
             oldFile.renameTo(newFile)
         }
+
+        Log.d("FileManager", text)
 
         //I will add metadata : date
         FileWriter(newFile, false).apply {
@@ -46,6 +49,20 @@ class FileManager(title: String, private val beforeTitle: String = "") {
         fr.close()
         br.close()
         return mainText
+    }
+
+    fun isDuplicate() : Boolean{
+        File(mainPath)
+            .apply {
+                if(exists()){
+                    listFiles()?.forEach {
+                        if(it.name == ("$title.txt")) return true
+                    }
+                    return false
+                }else
+                    return true
+            }
+
     }
 
     fun deleteFile(){

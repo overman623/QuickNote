@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 
@@ -38,19 +39,15 @@ class MainActivity : AppCompatActivity() {
         }
 
         val textItems : MutableList<TextListData> = mutableListOf()
-        File(Environment.getDownloadCacheDirectory().absolutePath +
-                File.separator + packageName + File.separator + "memo")
+        File(Environment.getDataDirectory().absolutePath +
+                "/data/" + packageName + "/memo")
             .apply {
-                Log.d(tag, absolutePath)
                 if(exists()){
                     listFiles()?.forEach {
                         textItems.add(0, TextListData(0, "date", it.name))
                     }
-                    Log.d(tag, "exist folder")
-                }else{
+                }else
                     mkdir()
-                    Log.d(tag, "not exist folder")
-                }
             }
 
 //        val textItems : MutableList<TextListData> = mutableListOf(TextListData(0,"date1", "Title1", "Text1"),
@@ -123,6 +120,8 @@ class MainActivity : AppCompatActivity() {
                         // app-defined int constant. The callback method gets the
                         // result of the request.
                     }
+                    Toast.makeText(this, "You have to allow permissions", Toast.LENGTH_SHORT).show()
+                    finish()
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
                 }

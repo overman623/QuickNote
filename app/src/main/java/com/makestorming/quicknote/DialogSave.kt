@@ -4,13 +4,13 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.util.Log
 import android.view.Gravity
+import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AlertDialog
 import kotlinx.android.synthetic.main.dialog_save.*
 
-class DialogSave(context: Context, val title : String, private val callback : Callback) : AlertDialog(context) {
+class DialogSave(context: Context, private val title : String, private val isExit : Boolean, private val callback : Callback) : AlertDialog(context) {
 
     val TAG = DialogSave::class.java.name
 
@@ -37,23 +37,30 @@ class DialogSave(context: Context, val title : String, private val callback : Ca
         editTitle.setText(title)
         buttonSave.setOnClickListener{
             editTitle.text.toString().let {
-                val matched = Regex(pattern = "^[^.\\\\/:*?\"<>|]?[^\\\\/:*?\"<>|]*").containsMatchIn(input = it)
-                if(matched) textAlert.text = "Memo title must not have \\/, :, *, ?, \\| "
+                dismiss()
+                val matched = Regex(pattern = "[:\\\\/%*?:|\"<>]").containsMatchIn(input = it)
+                if(matched) textAlert.text = "Memo title must not have / : * ? | "
                 else if (it.isEmpty() || it.isBlank()) textAlert.text = "Please input memo title "
+                else if (FileManager(it).isDuplicate()) textAlert.text = "File name is duplicate other "
                 else callback.getTitle(it)
             }
         }
 
-    }
+        if(isExit) buttonExit.visibility = View.VISIBLE
+        buttonExit.setOnClickListener {
+            dismiss()
+            callback.exit(this@DialogSave)
+        }
 
+    }
 
     interface Callback {
         fun getTitle(text: String?)
+        fun exit(dialog: DialogSave)
     }
 
     fun testCallback(callback: ((String)->Unit)) {
         callback.invoke("test")
     }
-
 
 }
