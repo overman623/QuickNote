@@ -5,12 +5,11 @@ import android.util.Log
 import java.io.*
 
 
-class FileManager(var title: String, private val beforeTitle: String = "") {
+class FileManager(var title: String = "", private val beforeTitle: String = "") {
 
     private val mainPath = Environment.getDataDirectory().absolutePath +
             "/data/com.makestorming.quicknote/memo"
     private val mainFile = File(mainPath + File.separator + "$title.txt")
-
 
     fun makeFile(
         date: String?,
@@ -23,8 +22,6 @@ class FileManager(var title: String, private val beforeTitle: String = "") {
         if(oldFile.exists()){
             oldFile.renameTo(newFile)
         }
-
-        Log.d("FileManager", text)
 
         //I will add metadata : date
         FileWriter(newFile, false).apply {
@@ -39,16 +36,35 @@ class FileManager(var title: String, private val beforeTitle: String = "") {
         val fr = FileReader(mainFile)
         val br = BufferedReader(fr)
         var read: String?
-        var mainText: String? = null
+        var mainText: String? = ""
 
         while (br.readLine().also{ read = it } != null) {
-            Log.d("file", read)
             mainText += read
         }
 
         fr.close()
         br.close()
         return mainText
+    }
+
+    fun readLine(file: File) : String{
+        val fr = FileReader(file)
+        val br = BufferedReader(fr)
+        var read: String?
+        var mainText: String? = null
+
+        while (br.readLine().also{ read = it } != null) {
+//            Log.d("file", read)
+            if((read?.trim() ?: "").isNotBlank()) {
+                mainText = read
+                break
+            }
+        }
+
+        fr.close()
+        br.close()
+
+        return mainText!!
     }
 
     fun isDuplicate() : Boolean{

@@ -26,12 +26,14 @@ class MemoActivity : AppCompatActivity() {
 
         intent.apply {
             date = getStringExtra("DATE")
-            title = getStringExtra("TITLE")?.let { it } ?: ""
-            text = getStringExtra("TEXT")?.let { it } ?: ""
+            title = getStringExtra("TITLE")?.let {
+                text = FileManager(it).readFile() //readfile
+                it
+            } ?: ""
             order = getIntExtra("ORDER", 0)
+//            text = getStringExtra("TEXT")?.let { it } ?: ""
         }
-
-
+        setTitle(title)
 
         fab.setOnClickListener {
             showDialogSave(false)
@@ -89,30 +91,18 @@ class MemoActivity : AppCompatActivity() {
                     this@MemoActivity.finish()
                 }
             }
-
-            override fun exit(dialog: DialogSave) {
+            override fun exit() {
                 this@MemoActivity.finish()
             }
-
         }).apply {
             show()
         }
-
     }
 
     private fun saveText(title: String?, beforeTitle: String?) : Boolean{
-
+        Log.d(TAG, editText.text.toString())
         FileManager(title!!, beforeTitle!!).apply {
-            return when(makeFile(date, text, order)){
-                true -> {
-
-                    true
-                }
-                else -> {
-
-                    false
-                }
-            }
+            return makeFile(date, editText.text.toString(), order)
         }
 
     }

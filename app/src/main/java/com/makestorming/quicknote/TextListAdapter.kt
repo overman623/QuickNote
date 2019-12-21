@@ -30,6 +30,7 @@ class TextListAdapter(items: MutableList<TextListData>, private val connector: C
 //                val date = itemView.textDate
                 itemView.textTitle.text = item?.title
                 itemView.textDate.text = item?.date
+                itemView.textContent.text = item?.text
                 itemView.setOnClickListener{
                     connector.getAction(item)
                 }

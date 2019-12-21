@@ -44,7 +44,8 @@ class MainActivity : AppCompatActivity() {
             .apply {
                 if(exists()){
                     listFiles()?.forEach {
-                        textItems.add(0, TextListData(0, "date", it.name))
+                        textItems.add(0, TextListData(0, "date",
+                            it.name.replace(".txt", ""), FileManager().readLine(it)))
                     }
                 }else
                     mkdir()
@@ -90,7 +91,6 @@ class MainActivity : AppCompatActivity() {
             item?.let {
                 putExtra("TITLE", it.title)
                 putExtra("DATE", it.date)
-                putExtra("TEXT", it.text)
                 putExtra("ORDER", it.order)
             }
         })

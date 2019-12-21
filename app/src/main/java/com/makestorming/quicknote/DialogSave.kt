@@ -49,14 +49,14 @@ class DialogSave(context: Context, private val title : String, private val isExi
         if(isExit) buttonExit.visibility = View.VISIBLE
         buttonExit.setOnClickListener {
             dismiss()
-            callback.exit(this@DialogSave)
+            callback.exit()
         }
 
     }
 
     interface Callback {
         fun getTitle(text: String?)
-        fun exit(dialog: DialogSave)
+        fun exit()
     }
 
     fun testCallback(callback: ((String)->Unit)) {
