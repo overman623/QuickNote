@@ -15,6 +15,8 @@ class MemoActivity : AppCompatActivity() {
 
     val TAG = MemoActivity::class.java.name
 
+    private val PICK_CONTACT_REQUEST = 1
+
     private var date : String? = null
     private var title : String? = ""
     private var text : String? = ""
@@ -31,9 +33,12 @@ class MemoActivity : AppCompatActivity() {
                 it
             } ?: ""
             order = getIntExtra("ORDER", 0)
-//            text = getStringExtra("TEXT")?.let { it } ?: ""
         }
-        setTitle(title)
+
+        setTitle(
+            if(title == "") "new memo"
+            else title
+        )
 
         fab.setOnClickListener {
             showDialogSave(false)
@@ -55,10 +60,6 @@ class MemoActivity : AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_settings -> {
-                //setting dialog
-                true
-            }
             R.id.action_font_size -> {
                 //font size dialog
                 true
@@ -74,13 +75,10 @@ class MemoActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         if(editText.text.toString() == text){
-            Log.d("MemoActivity", "if")
-            //show dialog : would you save the text
+            setResult(PICK_CONTACT_REQUEST)
             super.onBackPressed()
         }else{
             showDialogSave(true)
-            Log.d("MemoActivity", "else")
-            //dialog save text
         }
     }
 
@@ -88,6 +86,7 @@ class MemoActivity : AppCompatActivity() {
         DialogSave(this, title!!, isExit, object : DialogSave.Callback{
             override fun getTitle(text: String?) {
                 if(saveText(text, title)) { //true : activity close
+                    setResult(PICK_CONTACT_REQUEST)
                     this@MemoActivity.finish()
                 }
             }
@@ -104,7 +103,6 @@ class MemoActivity : AppCompatActivity() {
         FileManager(title!!, beforeTitle!!).apply {
             return makeFile(date, editText.text.toString(), order)
         }
-
     }
 
 

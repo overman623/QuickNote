@@ -1,6 +1,7 @@
 package com.makestorming.quicknote
 
 import android.Manifest
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -22,6 +23,14 @@ class MainActivity : AppCompatActivity() {
     private val permissions : Array<String> = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE,
         Manifest.permission.WRITE_EXTERNAL_STORAGE)
     private val MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1
+    private val PICK_CONTACT_REQUEST = 1
+    private val textItems : MutableList<TextListData> = mutableListOf()
+
+    private val mAdapter = TextListAdapter(textItems, object : TextListAdapter.Callback{
+        override fun getAction(item : TextListData?) {
+            openWriteActivity(item)
+        }
+    })
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,34 +47,17 @@ class MainActivity : AppCompatActivity() {
             openWriteActivity(null)
         }
 
-        val textItems : MutableList<TextListData> = mutableListOf()
-        File(Environment.getDataDirectory().absolutePath +
-                "/data/" + packageName + "/memo")
-            .apply {
-                if(exists()){
-                    listFiles()?.forEach {
-                        textItems.add(0, TextListData(0, "date",
-                            it.name.replace(".txt", ""), FileManager().readLine(it)))
-                    }
-                }else
-                    mkdir()
-            }
-
-//        val textItems : MutableList<TextListData> = mutableListOf(TextListData(0,"date1", "Title1", "Text1"),
-//            TextListData(0,"date2", "Title2", "Text2"),TextListData(0,"date3", "Title3", "Text3"))
+        loadFiles()
 
         if(textItems.size == 0) textCenter.text = getString(R.string.text_center)
 
-        val mAdapter = TextListAdapter(textItems, object : TextListAdapter.Callback{
-            override fun getAction(item : TextListData?) {
-                openWriteActivity(item)
-            }
-        })
+
 
         textViewList.adapter = mAdapter
         val lm = LinearLayoutManager(this)
         textViewList.layoutManager = lm
         textViewList.setHasFixedSize(true)
+
     }
 
 
@@ -87,13 +79,13 @@ class MainActivity : AppCompatActivity() {
 
     fun openWriteActivity(item : TextListData?) {
         val intent = Intent(this, MemoActivity::class.java)
-        startActivity(intent.apply {
+        startActivityForResult(intent.apply {
             item?.let {
                 putExtra("TITLE", it.title)
                 putExtra("DATE", it.date)
                 putExtra("ORDER", it.order)
             }
-        })
+        }, PICK_CONTACT_REQUEST)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int,
@@ -134,6 +126,36 @@ class MainActivity : AppCompatActivity() {
                 // Ignore all other requests.
             }
         }
+    }
+
+    private fun loadFiles(){
+        textItems.clear()
+        File(Environment.getDataDirectory().absolutePath +
+                "/data/" + packageName + "/memo")
+            .apply {
+                if(exists()){
+                    listFiles()?.forEach {
+                        textItems.add(0, TextListData(0, "date",
+                            it.name.replace(".txt", ""), FileManager().readLine(it)))
+                    }
+                }else
+                    mkdir()
+            }
+        mAdapter.notifyDataSetChanged()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        // Check which request we're responding to
+        if (requestCode == PICK_CONTACT_REQUEST) {
+            // Make sure the request was successful
+            loadFiles()
+//            if (resultCode == Activity.RESULT_OK) {
+                // The user picked a contact.
+                // The Intent's data Uri identifies which contact was selected.
+                // Do something with the contact here (bigger example below)
+//            }
+        }
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
 }
