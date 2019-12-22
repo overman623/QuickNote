@@ -61,6 +61,10 @@ class MemoActivity : AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
+            R.id.action_save-> {
+                showDialogSave(false)
+                true
+            }
             R.id.action_font_size -> {
                 DialogFontSize(
                     this,
@@ -112,7 +116,6 @@ class MemoActivity : AppCompatActivity() {
     }
 
     private fun saveText(title: String?, beforeTitle: String?) : Boolean{
-        Log.d(tag, editText.text.toString())
         FileManager(title!!, beforeTitle!!).apply {
             return makeFile(date, editText.text.toString(), order)
         }

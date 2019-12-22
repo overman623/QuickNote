@@ -43,7 +43,7 @@ class DialogSave(context: Context, private val title : String, private val isExi
                 if(matched) textAlert.setText(R.string.dialog_no_char)
                 else if (it.isEmpty() || it.isBlank()) textAlert.setText(R.string.dialog_text_blank)
                 else if (FileManager(it).isDuplicate()){
-                    if(title.isNotBlank()){ //새파일 아님
+                    if(title.isNotBlank()){
                         dismiss()
                         callback.getTitle(it)
                     }else{
