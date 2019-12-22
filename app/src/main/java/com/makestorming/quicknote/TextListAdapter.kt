@@ -7,6 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.layout_text_item.view.*
+import java.text.SimpleDateFormat
+import java.util.*
 
 class TextListAdapter(items: MutableList<TextListData>, private val connector: Callback ) : RecyclerView.Adapter<TextListAdapter.MainViewHolder>(){
 
@@ -29,7 +31,7 @@ class TextListAdapter(items: MutableList<TextListData>, private val connector: C
 //                val title = itemView.textTitle
 //                val date = itemView.textDate
                 itemView.textTitle.text = item?.title
-                itemView.textDate.text = item?.date
+                itemView.textDate.text = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(item?.date)
                 itemView.textContent.text = item?.text
                 itemView.setOnClickListener{
                     connector.getAction(item)

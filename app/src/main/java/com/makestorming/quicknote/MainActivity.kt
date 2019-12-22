@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import java.io.File
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -65,7 +64,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
-//        menuInflater.inflate(R.menu.menu_main, menu)
+        menuInflater.inflate(R.menu.menu_main, menu)
         return true
     }
 
@@ -74,9 +73,37 @@ class MainActivity : AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_settings -> true
+            R.id.action_delete_memo -> {
+                deleteMemo()
+                true
+            }
+            R.id.action_sort_by_date -> {
+                sortMemoDate()
+                true
+            }
+            R.id.action_sort_by_index -> {
+                sortMemoIndex()
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun deleteMemo() {
+
+    }
+
+    private fun sortMemoIndex() {
+
+    }
+
+    private fun sortMemoDate() {
+        textItems.sortWith(Comparator { t1, t2 ->
+            val date: Long = t1.date
+            val date1: Long = t2.date
+            date1.compareTo(date)
+        })
+        mAdapter.notifyDataSetChanged()
     }
 
     fun openWriteActivity(item : TextListData?) {
@@ -131,16 +158,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadFiles(){
-
-
-        val file = File(Environment.getDataDirectory().absolutePath +
-                "/data/" + packageName + "/memo/ffff.txt")
-        val lastModDate = Date(file.lastModified())
-        Log.d(tag, "File last modified @ : " +
-
-                SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(lastModDate))
-
-
         textItems.clear()
         File(Environment.getDataDirectory().absolutePath +
                 "/data/" + packageName + "/memo")
@@ -149,7 +166,7 @@ class MainActivity : AppCompatActivity() {
                     listFiles()?.forEach {
                         textItems.add(
                             TextListData(0,
-                            SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(it.lastModified()),
+                            it.lastModified(),
                             it.name.replace(".txt", ""),
                             FileManager().readLine(it)))
                     }
@@ -157,6 +174,7 @@ class MainActivity : AppCompatActivity() {
                     mkdir()
             }
         mAdapter.notifyDataSetChanged()
+
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

@@ -1,8 +1,12 @@
 package com.makestorming.quicknote
 
+import android.media.MediaMetadataRetriever
 import android.os.Environment
 import android.util.Log
-import java.io.*
+import java.io.BufferedReader
+import java.io.File
+import java.io.FileReader
+import java.io.FileWriter
 
 
 class FileManager(var title: String = "", private val beforeTitle: String = "") {
@@ -21,8 +25,6 @@ class FileManager(var title: String = "", private val beforeTitle: String = "") 
         val oldFile = File(mainPath, File.separator + "$beforeTitle.txt")
         val newFile = mainFile
 
-        Log.d(tag, oldFile.absolutePath)
-        Log.d(tag, newFile.absolutePath)
 
         if(oldFile.exists()){
             oldFile.renameTo(newFile)
