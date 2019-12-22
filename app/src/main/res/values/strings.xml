@@ -4,7 +4,7 @@
     <string name="action_font_size">Font Size</string>
     <string name="text_center">make new text</string>
     <string name="action_erase_all">Erase All</string>
-    <string name="action_sort_by_date">date sort</string>
+    <string name="action_sort_by_date">Sort recently</string>
     <string name="action_delete_memo">delete memo</string>
-    <string name="action_sort_by_index">text sort</string>
+    <string name="action_sort_by_date_reverse">Sort lately</string>
 </resources>

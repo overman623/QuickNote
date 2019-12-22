@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
@@ -15,7 +14,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import java.io.File
-import java.text.SimpleDateFormat
 import java.util.*
 
 
@@ -78,11 +76,11 @@ class MainActivity : AppCompatActivity() {
                 true
             }
             R.id.action_sort_by_date -> {
-                sortMemoDate()
+                sortMemoDate(false)
                 true
             }
-            R.id.action_sort_by_index -> {
-                sortMemoIndex()
+            R.id.action_sort_by_date_reverse -> {
+                sortMemoDate(true)
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -93,15 +91,15 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun sortMemoIndex() {
-
-    }
-
-    private fun sortMemoDate() {
+    private fun sortMemoDate(isReverse : Boolean) {
         textItems.sortWith(Comparator { t1, t2 ->
             val date: Long = t1.date
             val date1: Long = t2.date
-            date1.compareTo(date)
+            if(isReverse){
+                date.compareTo(date1)
+            }else{
+                date1.compareTo(date)
+            }
         })
         mAdapter.notifyDataSetChanged()
     }
