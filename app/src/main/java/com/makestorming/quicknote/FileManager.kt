@@ -7,6 +7,8 @@ import java.io.*
 
 class FileManager(var title: String = "", private val beforeTitle: String = "") {
 
+    private val tag = FileManager::class.java.simpleName
+
     private val mainPath = Environment.getDataDirectory().absolutePath +
             "/data/com.makestorming.quicknote/memo"
     private val mainFile = File(mainPath + File.separator + "$title.txt")
@@ -18,6 +20,9 @@ class FileManager(var title: String = "", private val beforeTitle: String = "") 
     ): Boolean {
         val oldFile = File(mainPath, File.separator + "$beforeTitle.txt")
         val newFile = mainFile
+
+        Log.d(tag, oldFile.absolutePath)
+        Log.d(tag, newFile.absolutePath)
 
         if(oldFile.exists()){
             oldFile.renameTo(newFile)

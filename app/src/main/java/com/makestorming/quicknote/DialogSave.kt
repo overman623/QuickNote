@@ -37,12 +37,21 @@ class DialogSave(context: Context, private val title : String, private val isExi
         editTitle.setText(title)
         buttonSave.setOnClickListener{
             editTitle.text.toString().let {
-                dismiss()
                 val matched = Regex(pattern = "[:\\\\/%*?:|\"<>]").containsMatchIn(input = it)
                 if(matched) textAlert.text = "Memo title must not have / : * ? | "
                 else if (it.isEmpty() || it.isBlank()) textAlert.text = "Please input memo title "
-                else if (FileManager(it).isDuplicate()) textAlert.text = "File name is duplicate other "
-                else callback.getTitle(it)
+                else if (FileManager(it).isDuplicate()){
+                    if(title.isNotBlank()){ //새파일 아님
+                        dismiss()
+                        callback.getTitle(it)
+                    }else{ //새파일일때
+                        textAlert.text = "Memo name is duplicate other "
+                    }
+                }
+                else {
+                    dismiss()
+                    callback.getTitle(it)
+                }
             }
         }
 

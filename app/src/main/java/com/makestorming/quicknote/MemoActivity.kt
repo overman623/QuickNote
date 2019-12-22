@@ -13,7 +13,7 @@ import java.io.File
 
 class MemoActivity : AppCompatActivity() {
 
-    val TAG = MemoActivity::class.java.name
+    val tag = MemoActivity::class.java.name
 
     private val PICK_CONTACT_REQUEST = 1
 
@@ -89,12 +89,14 @@ class MemoActivity : AppCompatActivity() {
     private fun showDialogSave(isExit : Boolean){
         DialogSave(this, title!!, isExit, object : DialogSave.Callback{
             override fun getTitle(text: String?) {
+                Log.d(tag, "showDialogSave callback")
                 if(saveText(text, title)) { //true : activity close
                     setResult(PICK_CONTACT_REQUEST)
                     this@MemoActivity.finish()
                 }
             }
             override fun exit() {
+                Log.d(tag, "showDialogSave exit")
                 this@MemoActivity.finish()
             }
         }).apply {
@@ -103,11 +105,10 @@ class MemoActivity : AppCompatActivity() {
     }
 
     private fun saveText(title: String?, beforeTitle: String?) : Boolean{
-        Log.d(TAG, editText.text.toString())
+        Log.d(tag, editText.text.toString())
         FileManager(title!!, beforeTitle!!).apply {
             return makeFile(date, editText.text.toString(), order)
         }
     }
-
 
 }
