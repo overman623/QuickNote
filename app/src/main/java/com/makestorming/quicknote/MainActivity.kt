@@ -1,22 +1,24 @@
 package com.makestorming.quicknote
 
 import android.Manifest
-import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
-
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import java.io.File
+import java.text.DateFormat
+import java.text.SimpleDateFormat
+import java.util.*
+
 
 class MainActivity : AppCompatActivity() {
     private val tag : String = MainActivity::class.java.simpleName
@@ -129,14 +131,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadFiles(){
+
+
+        val file = File(Environment.getDataDirectory().absolutePath +
+                "/data/" + packageName + "/memo/ffff.txt")
+        val lastModDate = Date(file.lastModified())
+        Log.d(tag, "File last modified @ : " +
+
+                SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(lastModDate))
+
+
         textItems.clear()
         File(Environment.getDataDirectory().absolutePath +
                 "/data/" + packageName + "/memo")
             .apply {
                 if(exists()){
                     listFiles()?.forEach {
-                        textItems.add(0, TextListData(0, "date",
-                            it.name.replace(".txt", ""), FileManager().readLine(it)))
+                        textItems.add(
+                            TextListData(0,
+                            SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(it.lastModified()),
+                            it.name.replace(".txt", ""),
+                            FileManager().readLine(it)))
                     }
                 }else
                     mkdir()
