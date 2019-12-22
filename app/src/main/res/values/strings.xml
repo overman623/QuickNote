@@ -15,4 +15,10 @@
     <string name="text_new_file">new memo</string>
     <string name="text_not_permission">You have to allow permissions</string>
     <string name="text_delete">Memos deleted</string>
+
+    <string name="text_size_title">Text Size</string>
+    <string name="text_size_small">small</string>
+    <string name="text_size_middle">middle</string>
+    <string name="text_size_large">large</string>
+    <string name="text_size_Confirm">Confirm</string>
 </resources>

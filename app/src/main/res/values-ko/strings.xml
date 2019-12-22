@@ -15,4 +15,10 @@
     <string name="text_new_file">새 메모</string>
     <string name="text_not_permission">권한이 허가되지 않았습니다.</string>
     <string name="text_delete">메모가 삭제되었습니다.</string>
+
+    <string name="text_size_title">글씨 크기 설정</string>
+    <string name="text_size_small">작게</string>
+    <string name="text_size_middle">알맞게</string>
+    <string name="text_size_large">크게</string>
+    <string name="text_size_Confirm">확인</string>
 </resources>
