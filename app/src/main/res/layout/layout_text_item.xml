@@ -9,6 +9,16 @@
     android:background="@color/cardview_light_background"
     >
 
+    <ImageView
+        android:id="@+id/imageCheck"
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="16dp"
+        android:visibility="gone"
+        android:background="@drawable/ic_text_checked"
+        />
+
     <TextView
         android:id="@+id/textTitle"
         android:layout_width="match_parent"
@@ -22,7 +32,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
-        android:textSize="18sp"
+        android:textSize="14sp"
         android:gravity="end"
         />
 
@@ -32,11 +42,10 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:textSize="14sp"
-        android:gravity="start"
+        android:gravity="center_horizontal"
         android:layout_alignParentBottom="true"
         android:ellipsize="end"
         android:lines="1"
         />
-
 
 </RelativeLayout>

@@ -2,6 +2,7 @@ package com.makestorming.quicknote
 
 import android.graphics.Color
 import android.graphics.ColorSpace
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,7 +13,10 @@ import java.util.*
 
 class TextListAdapter(items: MutableList<TextListData>, private val connector: Callback ) : RecyclerView.Adapter<TextListAdapter.MainViewHolder>(){
 
+    private val tag = TextListAdapter::class.java.simpleName
     private var items : MutableList<TextListData>? = items
+    val setData : MutableSet<String> = mutableSetOf()
+    var deleteMode = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = MainViewHolder(parent)
 
@@ -28,16 +32,30 @@ class TextListAdapter(items: MutableList<TextListData>, private val connector: C
     override fun onBindViewHolder(holder: MainViewHolder, position: Int) {
         items?.get(position).let { item ->
             with(holder){
-//                val title = itemView.textTitle
-//                val date = itemView.textDate
                 itemView.textTitle.text = item?.title
                 itemView.textDate.text = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(item?.date)
                 itemView.textContent.text = item?.text
+                itemView.imageCheck.visibility = View.GONE
                 itemView.setOnClickListener{
-                    connector.getAction(item)
+                    if(deleteMode){
+                        if(it.imageCheck.visibility == View.GONE){
+                            it.imageCheck.visibility = View.VISIBLE
+                            setData.add(it.textTitle.text.toString())
+                        }else{
+                            it.imageCheck.visibility = View.GONE
+                            setData.remove(it.textTitle.text.toString())
+                        }
+                    }else{
+                        connector.getAction(item)
+                    }
+
                 }
             }
         }
+    }
+
+    fun clearCheckImage() {
+
     }
 
 }

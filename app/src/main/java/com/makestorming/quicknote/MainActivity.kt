@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
@@ -50,15 +51,25 @@ class MainActivity : AppCompatActivity() {
 
         if(textItems.size == 0) textCenter.text = getString(R.string.text_center)
 
-
-
-        textViewList.adapter = mAdapter
-        val lm = LinearLayoutManager(this)
-        textViewList.layoutManager = lm
-        textViewList.setHasFixedSize(true)
+        textViewList.apply {
+            adapter = mAdapter
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            setHasFixedSize(true)
+        }
 
     }
 
+    override fun onBackPressed() {
+        if(mAdapter.deleteMode){
+            mAdapter.deleteMode = false
+            fab.setImageResource(android.R.drawable.ic_menu_edit)
+            fab.setOnClickListener {
+                openWriteActivity(null)
+            }
+        }else{
+            super.onBackPressed()
+        }
+    }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -88,7 +99,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun deleteMemo() {
-
+        fab.setImageResource(android.R.drawable.ic_menu_delete)
+        fab.setOnClickListener {
+            mAdapter.setData.forEach {
+                FileManager(it).deleteFile()
+            }
+            loadFiles()
+            mAdapter.setData.clear()
+            mAdapter.clearCheckImage()
+            Toast.makeText(this@MainActivity, "Memos deleted", Toast.LENGTH_SHORT).show()
+            onBackPressed()
+        }
+        mAdapter.setData.clear()
+        mAdapter.deleteMode = true
     }
 
     private fun sortMemoDate(isReverse : Boolean) {
