@@ -54,8 +54,4 @@ class TextListAdapter(items: MutableList<TextListData>, private val connector: C
         }
     }
 
-    fun clearCheckImage() {
-
-    }
-
 }

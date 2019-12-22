@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">QuickNote</string>
+    <string name="app_name">QuickMemo</string>
     <string name="action_settings">Settings</string>
     <string name="action_font_size">Font Size</string>
     <string name="text_center">make new text</string>
@@ -7,4 +7,12 @@
     <string name="action_sort_by_date">Sort recently</string>
     <string name="action_delete_memo">delete memo</string>
     <string name="action_sort_by_date_reverse">Sort lately</string>
+
+    <string name="dialog_no_char">Memo title must not have / : * ? | </string>
+    <string name="dialog_text_blank">Please input memo title </string>
+    <string name="dialog_text_duplicate">Memo name is duplicate other </string>
+
+    <string name="text_new_file">new memo</string>
+    <string name="text_not_permission">You have to allow permissions</string>
+    <string name="text_delete">Memos deleted</string>
 </resources>

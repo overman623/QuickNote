@@ -1,4 +1,4 @@
-package com.makestorming.quicknote;
+package com.makestorming.quicknote.config;
 
 import android.content.Context
 import android.content.pm.PackageManager

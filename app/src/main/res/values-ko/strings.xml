@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">빠른메모</string>
+    <string name="action_settings">설정</string>
+    <string name="action_font_size">글자 크기</string>
+    <string name="text_center">파일이 없습니다.</string>
+    <string name="action_erase_all">전부 지우기</string>
+    <string name="action_sort_by_date">최신날짜별 정렬</string>
+    <string name="action_sort_by_date_reverse">예전날짜별 정렬</string>
+    <string name="action_delete_memo">메모 삭제</string>
+
+    <string name="dialog_no_char">메모 제목에 / : * ? | 등의 문자를 넣을수 없습니다.</string>
+    <string name="dialog_text_blank">메모의 제목은 필수사항입니다.</string>
+    <string name="dialog_text_duplicate">예전에 저장되었던 제목이 같은 메모가 있습니다.</string>
+
+    <string name="text_new_file">새 메모</string>
+    <string name="text_not_permission">권한이 허가되지 않았습니다.</string>
+    <string name="text_delete">메모가 삭제되었습니다.</string>
+</resources>

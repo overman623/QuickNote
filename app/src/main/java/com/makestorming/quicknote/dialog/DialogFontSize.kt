@@ -1,4 +1,4 @@
-package com.makestorming.quicknote
+package com.makestorming.quicknote.dialog
 
 import android.content.Context
 import android.graphics.Color
@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.Gravity
 import android.view.WindowManager
 import androidx.appcompat.app.AlertDialog
+import com.makestorming.quicknote.R
 import kotlinx.android.synthetic.main.dialog_font_size.*
 
 class DialogFontSize(context: Context, private val callback : Callback) : AlertDialog(context) {

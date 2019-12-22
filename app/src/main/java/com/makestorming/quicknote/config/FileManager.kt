@@ -1,8 +1,6 @@
-package com.makestorming.quicknote
+package com.makestorming.quicknote.config
 
-import android.media.MediaMetadataRetriever
 import android.os.Environment
-import android.util.Log
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader

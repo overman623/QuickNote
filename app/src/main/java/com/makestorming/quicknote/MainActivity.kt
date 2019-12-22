@@ -5,13 +5,14 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.makestorming.quicknote.config.FileManager
+import com.makestorming.quicknote.config.PermissionsChecker
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import java.io.File
@@ -106,8 +107,7 @@ class MainActivity : AppCompatActivity() {
             }
             loadFiles()
             mAdapter.setData.clear()
-            mAdapter.clearCheckImage()
-            Toast.makeText(this@MainActivity, "Memos deleted", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this@MainActivity, R.string.text_delete, Toast.LENGTH_SHORT).show()
             onBackPressed()
         }
         mAdapter.setData.clear()
@@ -162,7 +162,7 @@ class MainActivity : AppCompatActivity() {
                         // app-defined int constant. The callback method gets the
                         // result of the request.
                     }
-                    Toast.makeText(this, "You have to allow permissions", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, R.string.text_not_permission, Toast.LENGTH_SHORT).show()
                     finish()
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.

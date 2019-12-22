@@ -1,14 +1,15 @@
 package com.makestorming.quicknote
 
 import android.os.Bundle
-import android.os.Environment
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import com.makestorming.quicknote.config.FileManager
+import com.makestorming.quicknote.dialog.DialogFontSize
+import com.makestorming.quicknote.dialog.DialogSave
 import kotlinx.android.synthetic.main.activity_memo.*
 import kotlinx.android.synthetic.main.content_memo.*
-import java.io.File
 
 
 class MemoActivity : AppCompatActivity() {
@@ -36,7 +37,7 @@ class MemoActivity : AppCompatActivity() {
         }
 
         setTitle(
-            if(title == "") "new memo"
+            if(title == "") getString(R.string.text_new_file)
             else title
         )
 
@@ -61,11 +62,14 @@ class MemoActivity : AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.action_font_size -> {
-                DialogFontSize(this, object : DialogFontSize.Callback{
-                    override fun getSize(size: Float) {
-                        editText.textSize = size
-                    }
-                }).show()
+                DialogFontSize(
+                    this,
+                    object :
+                        DialogFontSize.Callback {
+                        override fun getSize(size: Float) {
+                            editText.textSize = size
+                        }
+                    }).show()
                 true
             }
             R.id.action_erase_all -> {
@@ -87,19 +91,22 @@ class MemoActivity : AppCompatActivity() {
     }
 
     private fun showDialogSave(isExit : Boolean){
-        DialogSave(this, title!!, isExit, object : DialogSave.Callback{
-            override fun getTitle(text: String?) {
-                Log.d(tag, "showDialogSave callback")
-                if(saveText(text, title)) { //true : activity close
-                    setResult(PICK_CONTACT_REQUEST)
+        DialogSave(
+            this,
+            title!!,
+            isExit,
+            object : DialogSave.Callback {
+                override fun getTitle(text: String?) {
+                    if (saveText(text, title)) { //true : activity close
+                        setResult(PICK_CONTACT_REQUEST)
+                        this@MemoActivity.finish()
+                    }
+                }
+
+                override fun exit() {
                     this@MemoActivity.finish()
                 }
-            }
-            override fun exit() {
-                Log.d(tag, "showDialogSave exit")
-                this@MemoActivity.finish()
-            }
-        }).apply {
+            }).apply {
             show()
         }
     }
