@@ -17,7 +17,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:gravity="center_vertical"
-        android:text="Path : "
+        android:text="Name : "
         android:textAlignment="center"
         android:textSize="20dp"
         app:layout_constraintEnd_toStartOf="@+id/editTitle"

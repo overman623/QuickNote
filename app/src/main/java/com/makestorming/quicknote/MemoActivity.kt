@@ -61,7 +61,11 @@ class MemoActivity : AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.action_font_size -> {
-                //font size dialog
+                DialogFontSize(this, object : DialogFontSize.Callback{
+                    override fun getSize(size: Float) {
+                        editText.textSize = size
+                    }
+                }).show()
                 true
             }
             R.id.action_erase_all -> {
