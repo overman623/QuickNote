@@ -22,4 +22,7 @@
     <string name="text_size_large">크게</string>
     <string name="text_size_Confirm">확인</string>
     <string name="action_save">메모 저장</string>
+    <string name="memo_name">제목 :</string>
+    <string name="memo_save">저장</string>
+    <string name="memo_exit">나가기</string>
 </resources>
