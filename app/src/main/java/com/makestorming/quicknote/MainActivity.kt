@@ -18,6 +18,14 @@ import kotlinx.android.synthetic.main.content_main.*
 import java.io.File
 import java.util.*
 
+/*
+
+1. 처음 실행될때만 파일의 목록을 불러와서 그 목록을 livedata에 저장함.
+2. 새로 파일이 추가된다면, 추가된 파일 이름을 livedata에 추가.
+3. 파일이 삭제된다면, livedata에서 해당하는 파일을 삭제한다.
+4. 파일이 변경된다면, livedata에서 해당하는 파일을 변경한다.
+
+*/
 
 class MainActivity : AppCompatActivity() {
     private val tag : String = MainActivity::class.java.simpleName
@@ -177,6 +185,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
 
     private fun loadFiles(){
         textItems.clear()
