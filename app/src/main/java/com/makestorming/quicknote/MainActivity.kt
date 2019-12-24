@@ -10,20 +10,28 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.makestorming.quicknote.config.FileManager
 import com.makestorming.quicknote.config.PermissionsChecker
+import com.makestorming.quicknote.databinding.ActivityMainBinding
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import java.io.File
 import java.util.*
 
+
 /*
+- 매번 모든 파일들을 다시 불러오는 동작이 비효율 적이기 때문에 livedata를 차용하기로 함.
+
 
 1. 처음 실행될때만 파일의 목록을 불러와서 그 목록을 livedata에 저장함.
 2. 새로 파일이 추가된다면, 추가된 파일 이름을 livedata에 추가.
 3. 파일이 삭제된다면, livedata에서 해당하는 파일을 삭제한다.
 4. 파일이 변경된다면, livedata에서 해당하는 파일을 변경한다.
+
+
+
 
 */
 
@@ -33,17 +41,29 @@ class MainActivity : AppCompatActivity() {
         Manifest.permission.WRITE_EXTERNAL_STORAGE)
     private val MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1
     private val PICK_CONTACT_REQUEST = 1
-    private val textItems : MutableList<TextListData> = mutableListOf()
+//    private val textItems : MutableList<TextListData> = mutableListOf()
+    private val model : MainViewModel2 = MainViewModel2()
+
+    private val mAdapter = TextListAdapter(model.textData, object : TextListAdapter.Callback{
+        override fun getAction(item : TextListData?) {
+            openWriteActivity(item)
+        }
+    })
+/*
 
     private val mAdapter = TextListAdapter(textItems, object : TextListAdapter.Callback{
         override fun getAction(item : TextListData?) {
             openWriteActivity(item)
         }
     })
+*/
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        val binding : ActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        binding.vm = model
+        binding.lifecycleOwner = this
+
         setSupportActionBar(toolbar)
 
         PermissionsChecker(this).apply {
@@ -58,7 +78,8 @@ class MainActivity : AppCompatActivity() {
 
         loadFiles()
 
-        if(textItems.size == 0) textCenter.text = getString(R.string.text_center)
+        if(model.textData.size == 0) textCenter.text = getString(R.string.text_center)
+//        if(textItems.size == 0) textCenter.text = getString(R.string.text_center)
 
         textViewList.apply {
             adapter = mAdapter
@@ -123,7 +144,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun sortMemoDate(isReverse : Boolean) {
-        textItems.sortWith(Comparator { t1, t2 ->
+//        textItems.sortWith(Comparator { t1, t2 ->
+        model.textData.sortWith(Comparator { t1, t2 ->
             val date: Long = t1.date
             val date1: Long = t2.date
             if(isReverse){
@@ -186,15 +208,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun addFile(){
+
+    }
+
 
     private fun loadFiles(){
-        textItems.clear()
+        model.textData.clear()
+//        textItems.clear()
         File(Environment.getDataDirectory().absolutePath +
                 "/data/" + packageName + "/memo")
             .apply {
                 if(exists()){
                     listFiles()?.forEach {
-                        textItems.add(
+                        model.textData.add(
+//                        textItems.add(
                             TextListData(0,
                             it.lastModified(),
                             it.name.replace(".txt", ""),
