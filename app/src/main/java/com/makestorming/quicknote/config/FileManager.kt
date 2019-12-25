@@ -19,7 +19,7 @@ class FileManager(var title: String = "", private val beforeTitle: String = "") 
         date: String?,
         text: String?,
         order: Int
-    ): Boolean {
+    ): File {
         val oldFile = File(mainPath, File.separator + "$beforeTitle.txt")
         val newFile = mainFile
 
@@ -34,7 +34,7 @@ class FileManager(var title: String = "", private val beforeTitle: String = "") 
             flush()
             close()
         }
-        return true
+        return newFile
     }
 
     fun readFile(): String? {

@@ -1,5 +1,6 @@
 package com.makestorming.quicknote
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -10,6 +11,7 @@ import com.makestorming.quicknote.dialog.DialogFontSize
 import com.makestorming.quicknote.dialog.DialogSave
 import kotlinx.android.synthetic.main.activity_memo.*
 import kotlinx.android.synthetic.main.content_memo.*
+import java.io.File
 
 
 class MemoActivity : AppCompatActivity() {
@@ -101,10 +103,20 @@ class MemoActivity : AppCompatActivity() {
             isExit,
             object : DialogSave.Callback {
                 override fun getTitle(text: String?) {
-                    if (saveText(text, title)) { //true : activity close
+                    /*if (saveText(text, title)) { //true : activity close
                         setResult(PICK_CONTACT_REQUEST)
                         this@MemoActivity.finish()
+                    }*/
+
+                    saveText(text, title).let {
+                        setResult(PICK_CONTACT_REQUEST, Intent().apply {
+                            putExtra("FILE_MAKE_DATE", it.lastModified())
+                            putExtra("FILE_NAME", it.name.replace(".txt", ""))
+                            putExtra("FILE_READ_LINE", FileManager().readLine(it))
+                        })
+                        this@MemoActivity.finish()
                     }
+
                 }
 
                 override fun exit() {
@@ -115,7 +127,7 @@ class MemoActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveText(title: String?, beforeTitle: String?) : Boolean{
+    private fun saveText(title: String?, beforeTitle: String?) : File {
         FileManager(title!!, beforeTitle!!).apply {
             return makeFile(date, editText.text.toString(), order)
         }

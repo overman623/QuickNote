@@ -22,6 +22,8 @@ import java.util.*
 
 
 /*
+
+
 - 매번 모든 파일들을 다시 불러오는 동작이 비효율 적이기 때문에 livedata를 차용하기로 함.
 
 
@@ -29,8 +31,6 @@ import java.util.*
 2. 새로 파일이 추가된다면, 추가된 파일 이름을 livedata에 추가.
 3. 파일이 삭제된다면, livedata에서 해당하는 파일을 삭제한다.
 4. 파일이 변경된다면, livedata에서 해당하는 파일을 변경한다.
-
-
 
 
 */
@@ -41,16 +41,17 @@ class MainActivity : AppCompatActivity() {
         Manifest.permission.WRITE_EXTERNAL_STORAGE)
     private val MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1
     private val PICK_CONTACT_REQUEST = 1
-//    private val textItems : MutableList<TextListData> = mutableListOf()
+    private val textItems : MutableList<TextListData> = mutableListOf()
     private val model : MainViewModel2 = MainViewModel2()
 
-    private val mAdapter = TextListAdapter(model.textData, object : TextListAdapter.Callback{
+//    private val mAdapter = TextListAdapter(textItems, object : TextListAdapter.Callback{
+    private val mAdapter = TextListAdapter(model.list, object : TextListAdapter.Callback{
         override fun getAction(item : TextListData?) {
             openWriteActivity(item)
         }
     })
-/*
 
+/*
     private val mAdapter = TextListAdapter(textItems, object : TextListAdapter.Callback{
         override fun getAction(item : TextListData?) {
             openWriteActivity(item)
@@ -78,7 +79,8 @@ class MainActivity : AppCompatActivity() {
 
         loadFiles()
 
-        if(model.textData.size == 0) textCenter.text = getString(R.string.text_center)
+//        if(model.textData.size == 0) textCenter.text = getString(R.string.text_center)
+//        if(textItems.size == 0) textCenter.text = getString(R.string.text_center)
 //        if(textItems.size == 0) textCenter.text = getString(R.string.text_center)
 
         textViewList.apply {
@@ -131,21 +133,27 @@ class MainActivity : AppCompatActivity() {
     private fun deleteMemo() {
         fab.setImageResource(android.R.drawable.ic_menu_delete)
         fab.setOnClickListener {
-            mAdapter.setData.forEach {
-                FileManager(it).deleteFile()
+//            mAdapter.setData.forEach {
+            mAdapter.setData2.forEach {
+                FileManager(it.title).deleteFile()
+                model.list.remove(it)
             }
-            loadFiles()
-            mAdapter.setData.clear()
+            mAdapter.notifyDataSetChanged()
+//            loadFiles() //->삭제된 데이터만 제거하면 저절로 UI에 반영됨.
+//            mAdapter.setData.clear()
+            mAdapter.setData2.clear()
             Toast.makeText(this@MainActivity, R.string.text_delete, Toast.LENGTH_SHORT).show()
             onBackPressed()
         }
-        mAdapter.setData.clear()
+//        mAdapter.setData.clear()
+        mAdapter.setData2.clear()
         mAdapter.deleteMode = true
     }
 
     private fun sortMemoDate(isReverse : Boolean) {
+        model.list.sortWith(Comparator { t1, t2 ->
 //        textItems.sortWith(Comparator { t1, t2 ->
-        model.textData.sortWith(Comparator { t1, t2 ->
+//        model.textData.value?.sortWith(Comparator { t1, t2 ->
             val date: Long = t1.date
             val date1: Long = t2.date
             if(isReverse){
@@ -208,21 +216,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun addFile(){
-
-    }
-
-
     private fun loadFiles(){
-        model.textData.clear()
+
+//        model.textData.clear()
 //        textItems.clear()
+
+
+
         File(Environment.getDataDirectory().absolutePath +
                 "/data/" + packageName + "/memo")
             .apply {
                 if(exists()){
                     listFiles()?.forEach {
-                        model.textData.add(
+//                        model.addData(
 //                        textItems.add(
+                        model.list.add(
                             TextListData(0,
                             it.lastModified(),
                             it.name.replace(".txt", ""),
@@ -231,6 +239,7 @@ class MainActivity : AppCompatActivity() {
                 }else
                     mkdir()
             }
+
         mAdapter.notifyDataSetChanged()
 
     }
@@ -239,7 +248,16 @@ class MainActivity : AppCompatActivity() {
         // Check which request we're responding to
         if (requestCode == PICK_CONTACT_REQUEST) {
             // Make sure the request was successful
-            loadFiles()
+//            loadFiles()
+
+            data?.let{
+                model.list.add(
+                    TextListData(0,
+                        it.getLongExtra("FILE_MAKE_DATE", 0),
+                        it.getStringExtra("FILE_NAME")!!,
+                        it.getStringExtra("FILE_READ_LINE")!!))
+            }
+            mAdapter.notifyDataSetChanged()
 //            if (resultCode == Activity.RESULT_OK) {
                 // The user picked a contact.
                 // The Intent's data Uri identifies which contact was selected.
@@ -248,5 +266,7 @@ class MainActivity : AppCompatActivity() {
         }
         super.onActivityResult(requestCode, resultCode, data)
     }
+
+
 
 }

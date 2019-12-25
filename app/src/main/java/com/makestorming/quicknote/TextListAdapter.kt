@@ -1,7 +1,5 @@
 package com.makestorming.quicknote
 
-import android.graphics.Color
-import android.graphics.ColorSpace
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -16,6 +14,7 @@ class TextListAdapter(items: MutableList<TextListData>, private val connector: C
     private val tag = TextListAdapter::class.java.simpleName
     private var items : MutableList<TextListData>? = items
     val setData : MutableSet<String> = mutableSetOf()
+    val setData2 : MutableSet<TextListData> = mutableSetOf()
     var deleteMode = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = MainViewHolder(parent)
@@ -41,9 +40,11 @@ class TextListAdapter(items: MutableList<TextListData>, private val connector: C
                         if(it.imageCheck.visibility == View.GONE){
                             it.imageCheck.visibility = View.VISIBLE
                             setData.add(it.textTitle.text.toString())
+                            setData2.add(item!!)
                         }else{
                             it.imageCheck.visibility = View.GONE
                             setData.remove(it.textTitle.text.toString())
+                            setData2.remove(item)
                         }
                     }else{
                         connector.getAction(item)
