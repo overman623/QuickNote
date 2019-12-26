@@ -45,14 +45,14 @@ class DialogSave(context: Context, private val title : String, private val isExi
                 else if (FileManager(it).isDuplicate()){
                     if(title.isNotBlank()){
                         dismiss()
-                        callback.getTitle(it)
+                        callback.getTitle(title, it)
                     }else{
                         textAlert.setText(R.string.dialog_text_duplicate)
                     }
                 }
                 else {
                     dismiss()
-                    callback.getTitle(it)
+                    callback.getTitle(title, it)
                 }
             }
         }
@@ -66,7 +66,7 @@ class DialogSave(context: Context, private val title : String, private val isExi
     }
 
     interface Callback {
-        fun getTitle(text: String?)
+        fun getTitle(nowTitle : String, newTitle: String?)
         fun exit()
     }
 

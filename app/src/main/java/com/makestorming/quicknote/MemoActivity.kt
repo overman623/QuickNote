@@ -13,15 +13,18 @@ import kotlinx.android.synthetic.main.activity_memo.*
 import kotlinx.android.synthetic.main.content_memo.*
 import java.io.File
 
+/*
+
+LiveData를 공유하는 무언가가 있었으면 좋을것 같음.
+
+*/
 
 class MemoActivity : AppCompatActivity() {
 
     val tag = MemoActivity::class.java.name
 
-    private val PICK_CONTACT_REQUEST = 1
-
     private var date : String? = null
-    private var title : String? = ""
+    private var nowTitle : String? = ""
     private var text : String? = ""
     private var order : Int = 0
     
@@ -31,7 +34,7 @@ class MemoActivity : AppCompatActivity() {
 
         intent.apply {
             date = getStringExtra("DATE")
-            title = getStringExtra("TITLE")?.let {
+            nowTitle = getStringExtra("TITLE")?.let {
                 text = FileManager(it).readFile() //readfile
                 it
             } ?: ""
@@ -39,13 +42,12 @@ class MemoActivity : AppCompatActivity() {
         }
 
         setTitle(
-            if(title == "") getString(R.string.text_new_file)
-            else title
+            if(nowTitle == "") getString(R.string.text_new_file)
+            else nowTitle
         )
 
         fab.setOnClickListener {
-            showDialogSave(false)
-            //toast
+            showDialogSave(false) //toast
         }
 
         //title write
@@ -89,7 +91,6 @@ class MemoActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         if(editText.text.toString() == text){
-            setResult(PICK_CONTACT_REQUEST)
             super.onBackPressed()
         }else{
             showDialogSave(true)
@@ -99,17 +100,26 @@ class MemoActivity : AppCompatActivity() {
     private fun showDialogSave(isExit : Boolean){
         DialogSave(
             this,
-            title!!,
+            nowTitle!!,
             isExit,
             object : DialogSave.Callback {
-                override fun getTitle(text: String?) {
+                override fun getTitle(nowTitle : String, newTitle: String?) {
                     /*if (saveText(text, title)) { //true : activity close
                         setResult(PICK_CONTACT_REQUEST)
                         this@MemoActivity.finish()
                     }*/
 
-                    saveText(text, title).let {
-                        setResult(PICK_CONTACT_REQUEST, Intent().apply {
+                    //그전에 등록했던 파일이 존재하는지 여부를 파악해야함.
+                    //saveText에서 리턴한 파일은제외함.
+
+                    saveText(newTitle, nowTitle).let {
+                        val keyWord = if(nowTitle.isEmpty()){
+                            FILE_WRITE
+                        }else{
+                            FILE_RENAME
+                        }
+
+                        setResult(keyWord, Intent().apply {
                             putExtra("FILE_MAKE_DATE", it.lastModified())
                             putExtra("FILE_NAME", it.name.replace(".txt", ""))
                             putExtra("FILE_READ_LINE", FileManager().readLine(it))
@@ -127,8 +137,8 @@ class MemoActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveText(title: String?, beforeTitle: String?) : File {
-        FileManager(title!!, beforeTitle!!).apply {
+    private fun saveText(newTitle: String?, beforeTitle: String?) : File {
+        FileManager(newTitle!!, beforeTitle!!).apply {
             return makeFile(date, editText.text.toString(), order)
         }
     }

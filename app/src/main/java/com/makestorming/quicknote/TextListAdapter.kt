@@ -13,7 +13,7 @@ class TextListAdapter(items: MutableList<TextListData>, private val connector: C
 
     private val tag = TextListAdapter::class.java.simpleName
     private var items : MutableList<TextListData>? = items
-    val setData : MutableSet<String> = mutableSetOf()
+//    val setData : MutableSet<String> = mutableSetOf()
     val setData2 : MutableSet<TextListData> = mutableSetOf()
     var deleteMode = false
 
@@ -25,7 +25,7 @@ class TextListAdapter(items: MutableList<TextListData>, private val connector: C
     override fun getItemCount(): Int = items!!.size
 
     interface Callback{
-        fun getAction(item : TextListData?)
+        fun getAction(item : TextListData?, index : Int)
     }
 
     override fun onBindViewHolder(holder: MainViewHolder, position: Int) {
@@ -39,15 +39,15 @@ class TextListAdapter(items: MutableList<TextListData>, private val connector: C
                     if(deleteMode){
                         if(it.imageCheck.visibility == View.GONE){
                             it.imageCheck.visibility = View.VISIBLE
-                            setData.add(it.textTitle.text.toString())
+//                            setData.add(it.textTitle.text.toString())
                             setData2.add(item!!)
                         }else{
                             it.imageCheck.visibility = View.GONE
-                            setData.remove(it.textTitle.text.toString())
+//                            setData.remove(it.textTitle.text.toString())
                             setData2.remove(item)
                         }
                     }else{
-                        connector.getAction(item)
+                        connector.getAction(item, position)
                     }
 
                 }

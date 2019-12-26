@@ -1,10 +1,12 @@
 package com.makestorming.quicknote
 
 import android.Manifest
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
@@ -26,11 +28,10 @@ import java.util.*
 
 - 매번 모든 파일들을 다시 불러오는 동작이 비효율 적이기 때문에 livedata를 차용하기로 함.
 
-
-1. 처음 실행될때만 파일의 목록을 불러와서 그 목록을 livedata에 저장함.
-2. 새로 파일이 추가된다면, 추가된 파일 이름을 livedata에 추가.
-3. 파일이 삭제된다면, livedata에서 해당하는 파일을 삭제한다.
-4. 파일이 변경된다면, livedata에서 해당하는 파일을 변경한다.
+1. 처음 실행될때만 파일의 목록을 불러와서 그 목록을 livedata에 저장함. - 완료
+2. 새로 파일이 추가된다면, 추가된 파일 이름을 livedata에 추가. - 완료
+3. 파일이 삭제된다면, livedata에서 해당하는 파일을 삭제한다. - 완료
+4. 파일이 변경된다면, livedata에서 해당하는 파일을 변경한다. - 완료
 
 
 */
@@ -39,25 +40,14 @@ class MainActivity : AppCompatActivity() {
     private val tag : String = MainActivity::class.java.simpleName
     private val permissions : Array<String> = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE,
         Manifest.permission.WRITE_EXTERNAL_STORAGE)
-    private val MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1
-    private val PICK_CONTACT_REQUEST = 1
-    private val textItems : MutableList<TextListData> = mutableListOf()
-    private val model : MainViewModel2 = MainViewModel2()
+    private val model : MainViewModel = MainViewModel()
 
-//    private val mAdapter = TextListAdapter(textItems, object : TextListAdapter.Callback{
     private val mAdapter = TextListAdapter(model.list, object : TextListAdapter.Callback{
-        override fun getAction(item : TextListData?) {
+        override fun getAction(item : TextListData?, index : Int) {
+            model.index.set(index)
             openWriteActivity(item)
         }
     })
-
-/*
-    private val mAdapter = TextListAdapter(textItems, object : TextListAdapter.Callback{
-        override fun getAction(item : TextListData?) {
-            openWriteActivity(item)
-        }
-    })
-*/
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,10 +68,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         loadFiles()
-
-//        if(model.textData.size == 0) textCenter.text = getString(R.string.text_center)
-//        if(textItems.size == 0) textCenter.text = getString(R.string.text_center)
-//        if(textItems.size == 0) textCenter.text = getString(R.string.text_center)
 
         textViewList.apply {
             adapter = mAdapter
@@ -152,8 +138,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun sortMemoDate(isReverse : Boolean) {
         model.list.sortWith(Comparator { t1, t2 ->
-//        textItems.sortWith(Comparator { t1, t2 ->
-//        model.textData.value?.sortWith(Comparator { t1, t2 ->
             val date: Long = t1.date
             val date1: Long = t2.date
             if(isReverse){
@@ -173,7 +157,7 @@ class MainActivity : AppCompatActivity() {
                 putExtra("DATE", it.date)
                 putExtra("ORDER", it.order)
             }
-        }, PICK_CONTACT_REQUEST)
+        }, MEMO)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int,
@@ -221,7 +205,7 @@ class MainActivity : AppCompatActivity() {
 //        model.textData.clear()
 //        textItems.clear()
 
-
+        var num = 0
 
         File(Environment.getDataDirectory().absolutePath +
                 "/data/" + packageName + "/memo")
@@ -231,6 +215,7 @@ class MainActivity : AppCompatActivity() {
 //                        model.addData(
 //                        textItems.add(
                         model.list.add(
+                            num++,
                             TextListData(0,
                             it.lastModified(),
                             it.name.replace(".txt", ""),
@@ -245,25 +230,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        // Check which request we're responding to
-        if (requestCode == PICK_CONTACT_REQUEST) {
-            // Make sure the request was successful
-//            loadFiles()
+
+        if (requestCode == MEMO) {
+            if (resultCode == FILE_RENAME) {
+                model.list.removeAt(model.index.get())
+            }
 
             data?.let{
-                model.list.add(
-                    TextListData(0,
-                        it.getLongExtra("FILE_MAKE_DATE", 0),
-                        it.getStringExtra("FILE_NAME")!!,
-                        it.getStringExtra("FILE_READ_LINE")!!))
+                model.apply {
+                    list.add(
+                        TextListData(0,
+                            it.getLongExtra("FILE_MAKE_DATE", 0),
+                            it.getStringExtra("FILE_NAME")!!,
+                            it.getStringExtra("FILE_READ_LINE")!!))
+                }
             }
             mAdapter.notifyDataSetChanged()
-//            if (resultCode == Activity.RESULT_OK) {
-                // The user picked a contact.
-                // The Intent's data Uri identifies which contact was selected.
-                // Do something with the contact here (bigger example below)
-//            }
         }
+
         super.onActivityResult(requestCode, resultCode, data)
     }
 
