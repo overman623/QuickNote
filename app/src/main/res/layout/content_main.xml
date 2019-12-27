@@ -5,8 +5,9 @@
     >
 
     <data>
+        <import type="android.view.View"/>
         <variable name="vm"
-            type="com.makestorming.quicknote.MainViewModel2">
+            type="com.makestorming.quicknote.MainViewModel">
         </variable>
     </data>
 
@@ -25,9 +26,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
-        android:text="@{String.valueOf(vm.list.size())}"
+        android:visibility="@{vm.list.size() == 0 ? View.VISIBLE : View.GONE}"
+        android:text="@string/text_center"
         />
-
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/textViewList"
