@@ -1,42 +1,45 @@
 package com.makestorming.quicknote
 
 import android.Manifest
-import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.view.Menu
+import android.view.MenuInflater
 import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import com.makestorming.quicknote.config.FileManager
 import com.makestorming.quicknote.config.PermissionsChecker
+import com.makestorming.quicknote.database.User
 import com.makestorming.quicknote.databinding.ActivityMainBinding
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import java.io.File
 import java.util.*
 
-
 /*
 
-
-- 매번 모든 파일들을 다시 불러오는 동작이 비효율 적이기 때문에 livedata를 차용하기로 함.
-
-1. 처음 실행될때만 파일의 목록을 불러와서 그 목록을 livedata에 저장함. - 완료
-2. 새로 파일이 추가된다면, 추가된 파일 이름을 livedata에 추가. - 완료
-3. 파일이 삭제된다면, livedata에서 해당하는 파일을 삭제한다. - 완료
-4. 파일이 변경된다면, livedata에서 해당하는 파일을 변경한다. - 완료
-
+//구글 인증이 끝났으면, 구글 인증정보를 데이터 베이스에 저장한다.
 
 */
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), View.OnClickListener {
     private val tag : String = MainActivity::class.java.simpleName
     private val permissions : Array<String> = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE,
         Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -48,6 +51,11 @@ class MainActivity : AppCompatActivity() {
             openWriteActivity(item)
         }
     })
+
+
+    private lateinit var database: DatabaseReference// ...
+    private lateinit var auth: FirebaseAuth// ...
+    lateinit var googleSignInClient : GoogleSignInClient //구글 로그인을 관리하는 클래스
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,13 +69,11 @@ class MainActivity : AppCompatActivity() {
             if(lacksPermissions(permissions)){
                 ActivityCompat.requestPermissions(this@MainActivity, permissions, MY_PERMISSIONS_REQUEST_READ_CONTACTS)
             }
-        }
+        }//파일 쓰기 권한은 없앨 예정임.
 
-        fab.setOnClickListener {
-            openWriteActivity(null)
-        }
 
-        loadFiles()
+
+        loadFiles() // -> load database data
 
         textViewList.apply {
             adapter = mAdapter
@@ -75,6 +81,46 @@ class MainActivity : AppCompatActivity() {
             setHasFixedSize(true)
         }
 
+        auth = FirebaseAuth.getInstance()
+        GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build().let {
+                googleSignInClient = GoogleSignIn.getClient(this, it)
+            }
+        buttonGoogle.setOnClickListener(this)
+        fab.setOnClickListener(this)
+        database = FirebaseDatabase.getInstance().reference
+
+    }
+
+    public override fun onStart() { //유저의 정보가 없다면 다이얼로그 창을 띄워서 로그인을 유도한다.
+        super.onStart()
+        // Check if user is signed in (non-null) and update UI accordingly.
+        setUserInfo()
+    }
+
+    private fun signOut(){
+        FirebaseAuth.getInstance().signOut()
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            Toast.makeText(this, "Sing out", Toast.LENGTH_SHORT).show()
+            model.email.set(null)
+            model.uid.set(null)
+            model.verified.set(false)
+        }
+    }
+
+    private fun writeNewUser(email: String, pass: String) {
+        val user = User(email, pass)
+//        database.child("users").child("1").setValue(user)
+        database.child("user2").child("1").child("1").setValue(user)
+    }
+
+    private fun writeNewMemo(email: String, pass: String) {
+        val user = User(email, pass)
+//        database.child("users").child("1").setValue(user)
+        database.child("user2").child("1").child("1").setValue(user)
     }
 
     override fun onBackPressed() {
@@ -91,7 +137,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.menu_main, menu)
+        if(model.verified.get()){
+            menuInflater.inflate(R.menu.menu_main, menu)
+        }
         return true
     }
 
@@ -112,6 +160,11 @@ class MainActivity : AppCompatActivity() {
                 sortMemoDate(true)
                 true
             }
+            R.id.action_sign_out -> {
+                signOut()
+                invalidateOptionsMenu()
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -119,20 +172,16 @@ class MainActivity : AppCompatActivity() {
     private fun deleteMemo() {
         fab.setImageResource(android.R.drawable.ic_menu_delete)
         fab.setOnClickListener {
-//            mAdapter.setData.forEach {
-            mAdapter.setData2.forEach {
+            mAdapter.setData.forEach {
                 FileManager(it.title).deleteFile()
                 model.list.remove(it)
             }
             mAdapter.notifyDataSetChanged()
-//            loadFiles() //->삭제된 데이터만 제거하면 저절로 UI에 반영됨.
-//            mAdapter.setData.clear()
-            mAdapter.setData2.clear()
+            mAdapter.setData.clear()
             Toast.makeText(this@MainActivity, R.string.text_delete, Toast.LENGTH_SHORT).show()
             onBackPressed()
         }
-//        mAdapter.setData.clear()
-        mAdapter.setData2.clear()
+        mAdapter.setData.clear()
         mAdapter.deleteMode = true
     }
 
@@ -202,9 +251,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadFiles(){
 
-//        model.textData.clear()
-//        textItems.clear()
-
         var num = 0
 
         File(Environment.getDataDirectory().absolutePath +
@@ -212,8 +258,6 @@ class MainActivity : AppCompatActivity() {
             .apply {
                 if(exists()){
                     listFiles()?.forEach {
-//                        model.addData(
-//                        textItems.add(
                         model.list.add(
                             num++,
                             TextListData(0,
@@ -246,11 +290,64 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             mAdapter.notifyDataSetChanged()
+        }else if(requestCode == 100){
+            val task =
+                GoogleSignIn.getSignedInAccountFromIntent(data)
+            try { // 구글 로그인 성공
+                val account =
+                    task.getResult(ApiException::class.java)
+                fireBaseAuthWithGoogle(account!!)
+            } catch (e: ApiException) {
+            }
         }
 
         super.onActivityResult(requestCode, resultCode, data)
     }
 
+    private fun fireBaseAuthWithGoogle(acct: GoogleSignInAccount) {
+        val credential = GoogleAuthProvider.getCredential(acct.idToken, null)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener(this
+            ) { task ->
+                if (task.isSuccessful) { // 로그인 성공
+                    Toast.makeText(
+                        this@MainActivity,
+                        "로그인 성공",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    setUserInfo()
+
+                } else { // 로그인 실패
+                    Toast.makeText(this@MainActivity, "로그인 실패", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
+    }
+
+    private fun setUserInfo(){
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            model.email.set(currentUser.email)
+            model.uid.set(currentUser.uid)
+            model.verified.set(currentUser.isEmailVerified)
+            Log.d(tag, getString(R.string.emailpassword_status_fmt, currentUser.email, currentUser.isEmailVerified))
+            Log.d(tag, getString(R.string.firebase_status_fmt, currentUser.uid))
+        }
+        invalidateOptionsMenu()
+    }
+
+    override fun onClick(view: View?) {
+        when(view!!.id){
+            R.id.buttonGoogle -> {
+                val signInIntent = googleSignInClient.signInIntent
+                startActivityForResult(signInIntent,100)
+            }
+            R.id.fab -> {
+                openWriteActivity(null)
+//            writeNewUser("test", "123456")
+            }
+        }
+    }
 
 
 }

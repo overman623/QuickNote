@@ -30,7 +30,7 @@ class DialogFontSize(context: Context, private val callback : Callback) : AlertD
     private fun setLayout() {
 
         radioGroup.check(R.id.radioButton2)
-        buttonConfirm.setOnClickListener {
+        buttonSignIn.setOnClickListener {
             val size = when(radioGroup.checkedRadioButtonId){
                 R.id.radioButton1 -> 14
                 R.id.radioButton2 -> 18
