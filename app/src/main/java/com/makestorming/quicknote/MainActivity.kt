@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.view.Menu
-import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
@@ -22,10 +21,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.*
 import com.makestorming.quicknote.config.FileManager
 import com.makestorming.quicknote.config.PermissionsChecker
+import com.makestorming.quicknote.database.DataBaseManager
 import com.makestorming.quicknote.database.User
 import com.makestorming.quicknote.databinding.ActivityMainBinding
 import kotlinx.android.synthetic.main.activity_main.*
@@ -52,8 +51,28 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     })
 
-
     private lateinit var database: DatabaseReference// ...
+
+    private val valueEventListener = object : ValueEventListener {
+        override fun onDataChange(dataSnapshot: DataSnapshot) {
+            // Get Post object and use the values to update the UI
+//            val post = dataSnapshot.getValue(User::class.java)
+            // ...
+            for (snapshot in dataSnapshot.children) {
+                Log.d("MainActivity", "Single ValueEventListener : " + snapshot.value)
+            }
+
+//            dataSnapshot.child("user").child("user1").child("email").value
+        }
+
+        override fun onCancelled(databaseError: DatabaseError) {
+            // Getting Post failed, log a message
+            Log.w(tag, "loadPost:onCancelled", databaseError.toException())
+            // ...
+        }
+
+    }
+
     private lateinit var auth: FirebaseAuth// ...
     lateinit var googleSignInClient : GoogleSignInClient //구글 로그인을 관리하는 클래스
 
@@ -71,9 +90,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
         }//파일 쓰기 권한은 없앨 예정임.
 
-
-
-        loadFiles() // -> load database data
+        loadFiles() // -> load database data -> 로그인 성공하면 부른다.
 
         textViewList.apply {
             adapter = mAdapter
@@ -90,7 +107,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
         buttonGoogle.setOnClickListener(this)
         fab.setOnClickListener(this)
+
         database = FirebaseDatabase.getInstance().reference
+
+
 
     }
 
@@ -101,7 +121,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun signOut(){
-        FirebaseAuth.getInstance().signOut()
+        auth.signOut()
+        googleSignInClient.signOut()
         val currentUser = auth.currentUser
         if (currentUser == null) {
             Toast.makeText(this, "Sing out", Toast.LENGTH_SHORT).show()
@@ -111,10 +132,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    private fun loadUser(){
+        database.addListenerForSingleValueEvent(valueEventListener) //리스너만 추가하면 자동으로 로드가 된다.
+        database.removeEventListener(valueEventListener)
+    }
+
     private fun writeNewUser(email: String, pass: String) {
         val user = User(email, pass)
-//        database.child("users").child("1").setValue(user)
-        database.child("user2").child("1").child("1").setValue(user)
+        database.child("users").child("1").setValue(user)
+//        database.child("user2").child("1").child("1").setValue(user)
+
     }
 
     private fun writeNewMemo(email: String, pass: String) {
@@ -127,9 +154,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         if(mAdapter.deleteMode){
             mAdapter.deleteMode = false
             fab.setImageResource(android.R.drawable.ic_menu_edit)
-            fab.setOnClickListener {
-                openWriteActivity(null)
-            }
+            fab.setOnClickListener(this)
         }else{
             super.onBackPressed()
         }
@@ -149,7 +174,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.action_delete_memo -> {
-                deleteMemo()
+//                deleteMemo()
+                loadUser()
                 true
             }
             R.id.action_sort_by_date -> {
@@ -330,9 +356,28 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             model.email.set(currentUser.email)
             model.uid.set(currentUser.uid)
             model.verified.set(currentUser.isEmailVerified)
-            Log.d(tag, getString(R.string.emailpassword_status_fmt, currentUser.email, currentUser.isEmailVerified))
-            Log.d(tag, getString(R.string.firebase_status_fmt, currentUser.uid))
+            database.orderByChild("user").addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+        //            val post = dataSnapshot.getValue(User::class.java)
+                    dataSnapshot.child("user").let {
+                        it.children.forEach {now ->
+                            if(currentUser.uid == now.child("uid").value) return
+                        }
+                        val user = User(currentUser.email, currentUser.uid) //신규 유저 추가
+                        database.child("user").child(it.childrenCount.toString()).setValue(user)//초기화
+                    }
+//            dataSnapshot.child("user").child("user1").child("email").value
+                }
+
+                override fun onCancelled(databaseError: DatabaseError) {
+                    // Getting Post failed, log a message
+                    Log.w(tag, "loadPost:onCancelled", databaseError.toException())
+                    // ...
+                }
+            })
+
         }
+
         invalidateOptionsMenu()
     }
 
@@ -344,7 +389,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
             R.id.fab -> {
                 openWriteActivity(null)
-//            writeNewUser("test", "123456")
+//                writeNewUser("test", "123456")
             }
         }
     }
