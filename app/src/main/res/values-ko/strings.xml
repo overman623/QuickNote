@@ -7,6 +7,7 @@
     <string name="action_sort_by_date">최신날짜별 정렬</string>
     <string name="action_sort_by_date_reverse">예전날짜별 정렬</string>
     <string name="action_delete_memo">메모 삭제</string>
+    <string name="action_sign_out">로그아웃</string>
 
     <string name="dialog_no_char">메모 제목에 / : * ? | 등의 문자를 넣을수 없습니다.</string>
     <string name="dialog_text_blank">메모의 제목은 필수사항입니다.</string>
@@ -25,4 +26,9 @@
     <string name="memo_name">제목 :</string>
     <string name="memo_save">저장</string>
     <string name="memo_exit">나가기</string>
+
+    <string name="text_login">계정 인증</string>
+
+    <string name="firebase_status_fmt">Firebase User: %s</string>
+    <string name="emailpassword_status_fmt">Email User: %1$s (verified: %2$b)</string>
 </resources>

@@ -46,7 +46,7 @@
     </RadioGroup>
 
     <Button
-        android:id="@+id/buttonConfirm"
+        android:id="@+id/buttonSignIn"
         android:layout_width="152dp"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"

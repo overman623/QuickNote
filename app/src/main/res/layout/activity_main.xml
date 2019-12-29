@@ -6,6 +6,7 @@
     xmlns:bind="http://schemas.android.com/apk/res-auto"
     >
     <data>
+        <import type="android.view.View"/>
         <variable name="vm"
             type="com.makestorming.quicknote.MainViewModel">
         </variable>
@@ -40,7 +41,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        app:srcCompat="@android:drawable/ic_menu_edit" />
+        app:srcCompat="@android:drawable/ic_menu_edit"
+        android:visibility="@{vm.verified ? View.VISIBLE : View.GONE}"
+        />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

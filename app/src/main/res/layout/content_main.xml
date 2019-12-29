@@ -28,12 +28,37 @@
         android:gravity="center"
         android:visibility="@{vm.list.size() == 0 ? View.VISIBLE : View.GONE}"
         android:text="@string/text_center"
+        android:textSize="24sp"
         />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/textViewList"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <TextView
+        android:id="@+id/text_message_login"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#FFEB3B"
+        android:clickable="true"
+        android:focusable="true"
+        android:text="please sign in google"
+        android:gravity="center"
+        android:textSize="24sp"
+        android:visibility="@{vm.verified ? View.GONE : View.VISIBLE}"
+        />
+
+    <com.google.android.gms.common.SignInButton
+        android:id="@+id/buttonGoogle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="100dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:visibility="@{vm.verified ? View.GONE : View.VISIBLE}"
+        />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
