@@ -126,7 +126,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         googleSignInClient.signOut()
         val currentUser = auth.currentUser
         if (currentUser == null) {
-            Toast.makeText(this, "Sing out", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Sign out", Toast.LENGTH_SHORT).show()
             model.email.set(null)
             model.uid.set(null)
             model.verified.set(false)
@@ -231,6 +231,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             item?.let {
                 putExtra("TITLE", it.title)
                 putExtra("DATE", it.date)
+                putExtra("TEXT", it.text)
             }
         }, MEMO)
     }
@@ -277,7 +278,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun loadMemos(dataSnapshot : DataSnapshot){
         var num = 0
-
         dataSnapshot.child("memo").children.forEach {
             val data = it.getValue(TextListData::class.java)
             model.list.add(num++,
@@ -373,18 +373,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                     dataSnapshot.child("user").let {
                         it.children.forEach {now ->
-                            loadMemos(now)
-//                            if(currentUser.uid == now.child("uid").value){
-//                                loadMemos(now)
-//                                return
-//                            }
+                            if(currentUser.uid == now.child("uid").value){
+                                loadMemos(now)
+                                return
+                            }
                         }
-//                        val user = User(currentUser.email, currentUser.uid) //신규 유저 추가
-//                        database.child("user").child(it.childrenCount.toString()).setValue(user)//초기화
+                        val user = User(currentUser.email, currentUser.uid) //신규 유저 추가
+                        database.child("user").child(it.childrenCount.toString()).setValue(user)//초기화
                     }
 //            dataSnapshot.child("user").child("user1").child("email").value
                 }
-
                 override fun onCancelled(databaseError: DatabaseError) {
                     // Getting Post failed, log a message
                     Log.w(tag, "loadPost:onCancelled", databaseError.toException())

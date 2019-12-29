@@ -33,15 +33,13 @@ class MemoActivity : AppCompatActivity() {
         intent.apply {
             date = getStringExtra("DATE")
             nowTitle = getStringExtra("TITLE")?.let {
-                text = FileManager(it).readFile() //readfile
+                text = getStringExtra("TEXT")
                 it
             } ?: ""
         }
 
-        setTitle(
-            if(nowTitle == "") getString(R.string.text_new_file)
-            else nowTitle
-        )
+        title = if(nowTitle == "") getString(R.string.text_new_file)
+                else nowTitle
 
         fab.setOnClickListener {
             showDialogSave(false) //toast
