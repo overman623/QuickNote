@@ -25,7 +25,6 @@ class MemoActivity : AppCompatActivity() {
     private var date : String? = null
     private var nowTitle : String? = ""
     private var text : String? = ""
-    private var order : Int = 0
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +36,6 @@ class MemoActivity : AppCompatActivity() {
                 text = FileManager(it).readFile() //readfile
                 it
             } ?: ""
-            order = getIntExtra("ORDER", 0)
         }
 
         setTitle(
@@ -138,7 +136,7 @@ class MemoActivity : AppCompatActivity() {
 
     private fun saveText(newTitle: String?, beforeTitle: String?) : File {
         FileManager(newTitle!!, beforeTitle!!).apply {
-            return makeFile(date, editText.text.toString(), order)
+            return makeFile(date, editText.text.toString())
         }
     }
 

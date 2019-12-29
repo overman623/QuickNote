@@ -31,6 +31,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import java.io.File
 import java.util.*
+import kotlin.math.absoluteValue
 
 /*
 
@@ -90,7 +91,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
         }//파일 쓰기 권한은 없앨 예정임.
 
-        loadFiles() // -> load database data -> 로그인 성공하면 부른다.
+//        loadFiles() // -> load database data -> 로그인 성공하면 부른다.
 
         textViewList.apply {
             adapter = mAdapter
@@ -230,7 +231,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             item?.let {
                 putExtra("TITLE", it.title)
                 putExtra("DATE", it.date)
-                putExtra("ORDER", it.order)
             }
         }, MEMO)
     }
@@ -275,6 +275,20 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    private fun loadMemos(dataSnapshot : DataSnapshot){
+        var num = 0
+
+        dataSnapshot.child("memo").children.forEach {
+            val data = it.getValue(TextListData::class.java)
+            model.list.add(num++,
+                TextListData(
+                    data?.date?.absoluteValue as Long,
+                    data.title,
+                    data.text))
+        }
+        mAdapter.notifyDataSetChanged()
+    }
+
     private fun loadFiles(){
 
         var num = 0
@@ -286,7 +300,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     listFiles()?.forEach {
                         model.list.add(
                             num++,
-                            TextListData(0,
+                            TextListData(
                             it.lastModified(),
                             it.name.replace(".txt", ""),
                             FileManager().readLine(it)))
@@ -309,7 +323,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             data?.let{
                 model.apply {
                     list.add(
-                        TextListData(0,
+                        TextListData(
                             it.getLongExtra("FILE_MAKE_DATE", 0),
                             it.getStringExtra("FILE_NAME")!!,
                             it.getStringExtra("FILE_READ_LINE")!!))
@@ -320,8 +334,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             val task =
                 GoogleSignIn.getSignedInAccountFromIntent(data)
             try { // 구글 로그인 성공
-                val account =
-                    task.getResult(ApiException::class.java)
+                val account = task.getResult(ApiException::class.java)
                 fireBaseAuthWithGoogle(account!!)
             } catch (e: ApiException) {
             }
@@ -358,13 +371,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             model.verified.set(currentUser.isEmailVerified)
             database.orderByChild("user").addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
-        //            val post = dataSnapshot.getValue(User::class.java)
                     dataSnapshot.child("user").let {
                         it.children.forEach {now ->
-                            if(currentUser.uid == now.child("uid").value) return
+                            loadMemos(now)
+//                            if(currentUser.uid == now.child("uid").value){
+//                                loadMemos(now)
+//                                return
+//                            }
                         }
-                        val user = User(currentUser.email, currentUser.uid) //신규 유저 추가
-                        database.child("user").child(it.childrenCount.toString()).setValue(user)//초기화
+//                        val user = User(currentUser.email, currentUser.uid) //신규 유저 추가
+//                        database.child("user").child(it.childrenCount.toString()).setValue(user)//초기화
                     }
 //            dataSnapshot.child("user").child("user1").child("email").value
                 }
@@ -372,7 +388,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 override fun onCancelled(databaseError: DatabaseError) {
                     // Getting Post failed, log a message
                     Log.w(tag, "loadPost:onCancelled", databaseError.toException())
-                    // ...
                 }
             })
 
