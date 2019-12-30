@@ -8,7 +8,6 @@ import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AlertDialog
-import com.makestorming.quicknote.config.FileManager
 import com.makestorming.quicknote.R
 import kotlinx.android.synthetic.main.dialog_save.*
 
@@ -42,14 +41,6 @@ class DialogSave(context: Context, private val title : String, private val isExi
                 val matched = Regex(pattern = "[:\\\\/%*?:|\"<>]").containsMatchIn(input = it)
                 if(matched) textAlert.setText(R.string.dialog_no_char)
                 else if (it.isEmpty() || it.isBlank()) textAlert.setText(R.string.dialog_text_blank)
-                else if (FileManager(it).isDuplicate()){
-                    if(title.isNotBlank()){
-                        dismiss()
-                        callback.getTitle(title, it)
-                    }else{
-                        textAlert.setText(R.string.dialog_text_duplicate)
-                    }
-                }
                 else {
                     dismiss()
                     callback.getTitle(title, it)

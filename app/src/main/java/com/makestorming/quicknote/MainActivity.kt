@@ -21,7 +21,7 @@ import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.*
-import com.makestorming.quicknote.config.FileManager
+import com.makestorming.quicknote.config.DoubleClickPreventListener
 import com.makestorming.quicknote.config.PermissionsChecker
 import com.makestorming.quicknote.database.User
 import com.makestorming.quicknote.databinding.ActivityMainBinding
@@ -35,7 +35,7 @@ import java.util.*
 
 */
 
-class MainActivity : AppCompatActivity(), View.OnClickListener {
+class MainActivity : AppCompatActivity(){
     private val tag : String = MainActivity::class.java.simpleName
     private val permissions : Array<String> = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE,
         Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var auth: FirebaseAuth// ...
     lateinit var googleSignInClient : GoogleSignInClient //구글 로그인을 관리하는 클래스
     private lateinit var listener : ValueEventListener
-    private var memoListener : ChildEventListener = object : ChildEventListener{
+    private val memoListener : ChildEventListener = object : ChildEventListener{
 
         override fun onCancelled(p0: DatabaseError) {
             Log.d(tag, "onCancelled")
@@ -98,6 +98,23 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 val date = it.child("date").value as Long
                 model.list.remove(MemoListData(memoKey, date, title, text))
             }
+            mAdapter.notifyDataSetChanged()
+        }
+
+    }
+
+    private val clickListener = object : DoubleClickPreventListener(){
+        override fun onSingleClick(v: View?) {
+            when(v!!.id){
+                R.id.buttonGoogle -> {
+                    val signInIntent = googleSignInClient.signInIntent
+                    startActivityForResult(signInIntent,100)
+                }
+                R.id.fab -> {
+                    openWriteActivity(null)
+                }
+            }
+
         }
 
     }
@@ -129,8 +146,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             .build().let {
                 googleSignInClient = GoogleSignIn.getClient(this, it)
             }
-        buttonGoogle.setOnClickListener(this)
-        fab.setOnClickListener(this)
+        buttonGoogle.setOnClickListener(clickListener)
+        fab.setOnClickListener(clickListener)
 
         database = FirebaseDatabase.getInstance().reference
 
@@ -148,7 +165,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         if (currentUser == null) {
             Toast.makeText(this, "Sign out", Toast.LENGTH_SHORT).show()
             model.email.set(null)
+            model.userKey.set(null)
             model.uid.set(null)
+            model.index.set(0)
+            model.list.clear()
             model.verified.set(false)
         }
     }
@@ -157,7 +177,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         if(mAdapter.deleteMode){
             mAdapter.deleteMode = false
             fab.setImageResource(android.R.drawable.ic_menu_edit)
-            fab.setOnClickListener(this)
+            fab.setOnClickListener(clickListener)
         }else{
             super.onBackPressed()
         }
@@ -203,7 +223,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             mAdapter.setData.forEach {
                 database.child("user").child(model.userKey.get().toString()).child("memo").child(it.key).ref.removeValue()
             }
-            mAdapter.notifyDataSetChanged()
             Toast.makeText(this@MainActivity, R.string.text_delete, Toast.LENGTH_SHORT).show()
             onBackPressed()
         }
@@ -229,7 +248,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             item?.let {
                 putExtra("KEY", it.key)
                 putExtra("TITLE", it.title)
-                putExtra("DATE", it.date)
                 putExtra("TEXT", it.text)
             }
         }, MEMO)
@@ -340,6 +358,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             model.email.set(currentUser.email)
             model.uid.set(currentUser.uid)
             model.verified.set(currentUser.isEmailVerified)
+
             listener = object : ValueEventListener { //메모쪽만 실행해서 반복하면 된다.
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                     dataSnapshot.child("user").let {
@@ -348,6 +367,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
                         it.children.forEach {now ->
                             if(currentUser.uid == now.child("uid").value){
+
                                 model.userKey.set(now.key)
                                 database.child("user").child(now.key!!).child("memo").addChildEventListener(memoListener)
                                 return
@@ -378,7 +398,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         invalidateOptionsMenu()
     }
 
-    override fun onClick(view: View?) {
+
+/*    override fun onClick(view: View?) {
+
         when(view!!.id){
             R.id.buttonGoogle -> {
                 val signInIntent = googleSignInClient.signInIntent
@@ -388,7 +410,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 openWriteActivity(null)
             }
         }
-    }
+    }*/
 
     fun <T> List<T>.replace(newValue: T, block: (T) -> Boolean): List<T> {
         return map {

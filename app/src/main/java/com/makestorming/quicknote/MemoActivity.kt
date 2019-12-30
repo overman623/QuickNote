@@ -107,30 +107,6 @@ class MemoActivity : AppCompatActivity() {
                     }
                     setResult(keyWord, saveMemo(newTitle, nowTitle))
                     this@MemoActivity.finish()
-                    /*if (saveText(text, title)) { //true : activity close
-                        setResult(PICK_CONTACT_REQUEST)
-                        this@MemoActivity.finish()
-                    }*/
-
-                    //그전에 등록했던 파일이 존재하는지 여부를 파악해야함.
-                    //saveText에서 리턴한 파일은제외함.
-
-                    /*saveText(newTitle, nowTitle).let {
-                        val keyWord = if(nowTitle.isEmpty()){
-                            FILE_WRITE
-                        }else{
-                            MEMO_RENAME
-                        }
-
-                        setResult(keyWord, Intent().apply {
-                            putExtra("FILE_MAKE_DATE", it.lastModified())
-                            putExtra("FILE_MAKE_DATE", it.lastModified())
-                            putExtra("FILE_NAME", it.name.replace(".txt", ""))
-                            putExtra("FILE_READ_LINE", FileManager().readLine(it))
-                        })
-                        this@MemoActivity.finish()
-                    }*/
-
                 }
 
                 override fun exit() {
