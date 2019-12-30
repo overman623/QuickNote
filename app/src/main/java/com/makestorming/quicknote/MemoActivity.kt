@@ -22,6 +22,7 @@ class MemoActivity : AppCompatActivity() {
 
     val tag = MemoActivity::class.java.name
 
+    private var memoKey : String? = ""
     private var date : String? = null
     private var nowTitle : String? = ""
     private var text : String? = ""
@@ -31,6 +32,7 @@ class MemoActivity : AppCompatActivity() {
         setContentView(R.layout.activity_memo)
 
         intent.apply {
+            memoKey = getStringExtra("KEY")
             date = getStringExtra("DATE")
             nowTitle = getStringExtra("TITLE")?.let {
                 text = getStringExtra("TEXT")
@@ -99,6 +101,13 @@ class MemoActivity : AppCompatActivity() {
             isExit,
             object : DialogSave.Callback {
                 override fun getTitle(nowTitle : String, newTitle: String?) {
+                    val keyWord = if(nowTitle.isEmpty()){
+                        FILE_WRITE
+                    }else{
+                        MEMO_RENAME
+                    }
+                    setResult(keyWord, saveMemo(newTitle, nowTitle))
+                    this@MemoActivity.finish()
                     /*if (saveText(text, title)) { //true : activity close
                         setResult(PICK_CONTACT_REQUEST)
                         this@MemoActivity.finish()
@@ -107,20 +116,21 @@ class MemoActivity : AppCompatActivity() {
                     //그전에 등록했던 파일이 존재하는지 여부를 파악해야함.
                     //saveText에서 리턴한 파일은제외함.
 
-                    saveText(newTitle, nowTitle).let {
+                    /*saveText(newTitle, nowTitle).let {
                         val keyWord = if(nowTitle.isEmpty()){
                             FILE_WRITE
                         }else{
-                            FILE_RENAME
+                            MEMO_RENAME
                         }
 
                         setResult(keyWord, Intent().apply {
+                            putExtra("FILE_MAKE_DATE", it.lastModified())
                             putExtra("FILE_MAKE_DATE", it.lastModified())
                             putExtra("FILE_NAME", it.name.replace(".txt", ""))
                             putExtra("FILE_READ_LINE", FileManager().readLine(it))
                         })
                         this@MemoActivity.finish()
-                    }
+                    }*/
 
                 }
 
@@ -129,6 +139,15 @@ class MemoActivity : AppCompatActivity() {
                 }
             }).apply {
             show()
+        }
+    }
+
+    private fun saveMemo(newTitle: String?, beforeTitle: String?) : Intent{
+        return Intent().apply {
+            putExtra("KEY", memoKey)
+            putExtra("TITLE_BEFORE", beforeTitle)
+            putExtra("TITLE_NEW", newTitle)
+            putExtra("TEXT", editText.text.toString())
         }
     }
 

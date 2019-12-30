@@ -8,6 +8,7 @@ import androidx.databinding.ObservableInt
 
 class MainViewModel : ViewModel() {
 
+    var userKey : ObservableField<String> = ObservableField()
     var list : ObservableArrayList<TextListData> = ObservableArrayList()
     var index : ObservableInt = ObservableInt()
     var email : ObservableField<String> = ObservableField()

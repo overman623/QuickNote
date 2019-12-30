@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.Environment
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -24,14 +23,11 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.*
 import com.makestorming.quicknote.config.FileManager
 import com.makestorming.quicknote.config.PermissionsChecker
-import com.makestorming.quicknote.database.DataBaseManager
 import com.makestorming.quicknote.database.User
 import com.makestorming.quicknote.databinding.ActivityMainBinding
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
-import java.io.File
 import java.util.*
-import kotlin.math.absoluteValue
 
 /*
 
@@ -53,29 +49,40 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     })
 
     private lateinit var database: DatabaseReference// ...
+    private lateinit var auth: FirebaseAuth// ...
+    lateinit var googleSignInClient : GoogleSignInClient //구글 로그인을 관리하는 클래스
+    private lateinit var listener : ValueEventListener
+    private var memoListener : ChildEventListener = object : ChildEventListener{
 
-    private val valueEventListener = object : ValueEventListener {
-        override fun onDataChange(dataSnapshot: DataSnapshot) {
-            // Get Post object and use the values to update the UI
-//            val post = dataSnapshot.getValue(User::class.java)
-            // ...
-            for (snapshot in dataSnapshot.children) {
-                Log.d("MainActivity", "Single ValueEventListener : " + snapshot.value)
-            }
-
-//            dataSnapshot.child("user").child("user1").child("email").value
+        override fun onCancelled(p0: DatabaseError) {
         }
 
-        override fun onCancelled(databaseError: DatabaseError) {
-            // Getting Post failed, log a message
-            Log.w(tag, "loadPost:onCancelled", databaseError.toException())
-            // ...
+        override fun onChildMoved(p0: DataSnapshot, p1: String?) {
+        }
+
+        override fun onChildChanged(p0: DataSnapshot, p1: String?) {
+        }
+
+        var num = 0
+
+        override fun onChildAdded(p0: DataSnapshot, p1: String?) {
+            p0.let{
+                val memoKey = it.key.toString()
+                val title = it.child("title").value.toString()
+                val text = it.child("text").value.toString()
+                val date = it.child("date").value as Long
+                model.list.add(
+                    num++, TextListData(memoKey, date, title, text)
+                )
+                mAdapter.notifyDataSetChanged()
+            }
+
+        }
+
+        override fun onChildRemoved(p0: DataSnapshot) {
         }
 
     }
-
-    private lateinit var auth: FirebaseAuth// ...
-    lateinit var googleSignInClient : GoogleSignInClient //구글 로그인을 관리하는 클래스
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -90,8 +97,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 ActivityCompat.requestPermissions(this@MainActivity, permissions, MY_PERMISSIONS_REQUEST_READ_CONTACTS)
             }
         }//파일 쓰기 권한은 없앨 예정임.
-
-//        loadFiles() // -> load database data -> 로그인 성공하면 부른다.
 
         textViewList.apply {
             adapter = mAdapter
@@ -111,8 +116,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         database = FirebaseDatabase.getInstance().reference
 
-
-
     }
 
     public override fun onStart() { //유저의 정보가 없다면 다이얼로그 창을 띄워서 로그인을 유도한다.
@@ -131,24 +134,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             model.uid.set(null)
             model.verified.set(false)
         }
-    }
-
-    private fun loadUser(){
-        database.addListenerForSingleValueEvent(valueEventListener) //리스너만 추가하면 자동으로 로드가 된다.
-        database.removeEventListener(valueEventListener)
-    }
-
-    private fun writeNewUser(email: String, pass: String) {
-        val user = User(email, pass)
-        database.child("users").child("1").setValue(user)
-//        database.child("user2").child("1").child("1").setValue(user)
-
-    }
-
-    private fun writeNewMemo(email: String, pass: String) {
-        val user = User(email, pass)
-//        database.child("users").child("1").setValue(user)
-        database.child("user2").child("1").child("1").setValue(user)
     }
 
     override fun onBackPressed() {
@@ -175,8 +160,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.action_delete_memo -> {
-//                deleteMemo()
-                loadUser()
+                deleteMemo()
                 true
             }
             R.id.action_sort_by_date -> {
@@ -229,6 +213,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         val intent = Intent(this, MemoActivity::class.java)
         startActivityForResult(intent.apply {
             item?.let {
+                putExtra("KEY", it.key)
                 putExtra("TITLE", it.title)
                 putExtra("DATE", it.date)
                 putExtra("TEXT", it.text)
@@ -278,61 +263,88 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun loadMemos(dataSnapshot : DataSnapshot){
         var num = 0
-        dataSnapshot.child("memo").children.forEach {
-            val data = it.getValue(TextListData::class.java)
-            model.list.add(num++,
-                TextListData(
-                    data?.date?.absoluteValue as Long,
-                    data.title,
-                    data.text))
-        }
-        mAdapter.notifyDataSetChanged()
-    }
-
-    private fun loadFiles(){
-
-        var num = 0
-
-        File(Environment.getDataDirectory().absolutePath +
-                "/data/" + packageName + "/memo")
-            .apply {
-                if(exists()){
-                    listFiles()?.forEach {
-                        model.list.add(
-                            num++,
-                            TextListData(
-                            it.lastModified(),
-                            it.name.replace(".txt", ""),
-                            FileManager().readLine(it)))
-                    }
-                }else
-                    mkdir()
+        model.list.clear()
+        dataSnapshot.child("memo").let{
+            it.children.forEach { child ->
+                val memoKey = child.key.toString()
+                val title = child.child("title").value.toString()
+                val text = child.child("text").value.toString()
+                val date = child.child("date").value as Long
+                model.list.add(
+                    num++, TextListData(memoKey, date, title, text)
+                )
             }
-
-        mAdapter.notifyDataSetChanged()
+            mAdapter.notifyDataSetChanged()
+        }
 
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 
         if (requestCode == MEMO) {
-            if (resultCode == FILE_RENAME) {
-                model.list.removeAt(model.index.get())
-            }
 
-            data?.let{
-                model.apply {
-                    list.add(
-                        TextListData(
-                            it.getLongExtra("FILE_MAKE_DATE", 0),
-                            it.getStringExtra("FILE_NAME")!!,
-                            it.getStringExtra("FILE_READ_LINE")!!))
+            val query = database.orderByChild("user/${model.userKey.get().toString()}/memo")
+
+//                .child(model.userKey.get().toString())
+//                .orderByChild("memo")
+
+            if (resultCode == MEMO_RENAME) {//rename 작성 보류
+//                model.list.removeAt(model.index.get())
+
+                data?.let{
+                    it.getStringExtra("TITLE_NEW")
+                    it.getStringExtra("TITLE_BEFORE")
+                    model.list[model.index.get()].title
                 }
+
+                query.addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onCancelled(p0: DatabaseError) {
+
+                    }
+
+                    override fun onDataChange(p0: DataSnapshot) {
+                        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                    }
+
+                })
+
+
+                //데이터베이스 데이터 갱신
+                val memo = TextListData(
+                    data?.getStringExtra("KEY")!!,
+                    data.getLongExtra("FILE_MAKE_DATE", 0),
+                    data.getStringExtra("FILE_NAME")!!,
+                    data.getStringExtra("FILE_READ_LINE")!!
+                    ) //메모 갱신
+//                database.child("user").child(model.order.toString()).child("memo").child().setValue(memo)//초기화
+//                database.child("user").child(model.order.toString()).child("memo").orderByChild()
+            }else{
+
+                //무조건 키값이 없음.
+                //데이터베이스 데이터 추가
+                //새로운 키를 추가
+
+                val userKey = model.userKey.get()
+                val memoKey = database.child("user/${model.userKey.get().toString()}/memo").push().key
+                Log.d(tag, "userKey : " + userKey)
+                Log.d(tag, "memoKey : " + memoKey)
+                val date = System.currentTimeMillis()
+                val title = data?.getStringExtra("TITLE_NEW")
+                val text = data?.getStringExtra("TEXT")
+                if (memoKey == null) {
+                    Log.w(tag, "Couldn't get push key for posts")
+                    return
+                }
+                val memo = TextListData(memoKey, date, title!!, text!!) //신규 유저 추가
+                val memoValues = memo.toMap()
+                val childUpdates = HashMap<String, Any>()
+                childUpdates["/user/$userKey/memo/$memoKey"] = memoValues
+                database.updateChildren(childUpdates)
+
             }
             mAdapter.notifyDataSetChanged()
         }else if(requestCode == 100){
-            val task =
-                GoogleSignIn.getSignedInAccountFromIntent(data)
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try { // 구글 로그인 성공
                 val account = task.getResult(ApiException::class.java)
                 fireBaseAuthWithGoogle(account!!)
@@ -369,28 +381,43 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             model.email.set(currentUser.email)
             model.uid.set(currentUser.uid)
             model.verified.set(currentUser.isEmailVerified)
-            database.orderByChild("user").addListenerForSingleValueEvent(object : ValueEventListener {
+            listener = object : ValueEventListener { //메모쪽만 실행해서 반복하면 된다.
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                     dataSnapshot.child("user").let {
+
+                        if(!model.userKey.get().isNullOrEmpty()) return
+
                         it.children.forEach {now ->
                             if(currentUser.uid == now.child("uid").value){
-                                loadMemos(now)
+                                model.userKey.set(now.key)
+                                database.child("user").child(now.key!!).child("memo").addChildEventListener(memoListener)
+//                                loadMemos(now, now.key)
                                 return
                             }
                         }
+
+                        val key = database.child("user").push().key
+                        if (key == null) {
+                            Log.w(tag, "Couldn't get push key for posts")
+                            return
+                        }
+                        model.userKey.set(key)
+                        database.child("user").child(key).child("memo").addChildEventListener(memoListener)
                         val user = User(currentUser.email, currentUser.uid) //신규 유저 추가
-                        database.child("user").child(it.childrenCount.toString()).setValue(user)//초기화
+                        val userValues = user.toMap()
+                        val childUpdates = HashMap<String, Any>()
+                        childUpdates["/user/$key"] = userValues
+                        database.updateChildren(childUpdates)
                     }
-//            dataSnapshot.child("user").child("user1").child("email").value
                 }
                 override fun onCancelled(databaseError: DatabaseError) {
                     // Getting Post failed, log a message
                     Log.w(tag, "loadPost:onCancelled", databaseError.toException())
                 }
-            })
-
+            }
+            database.orderByChild("user").addListenerForSingleValueEvent(listener)
+//            database.orderByChild("user").addChildEventListener(listener2)
         }
-
         invalidateOptionsMenu()
     }
 
