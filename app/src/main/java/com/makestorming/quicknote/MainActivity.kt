@@ -64,7 +64,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         override fun onChildChanged(p0: DataSnapshot, p1: String?) { //갱신된 데이터가 온다.
 
-            Log.d(tag, p0.toString())
             model.list[model.index.get()].let{
                 it.key = p0.key.toString()
                 it.title = p0.child("title").value.toString()
@@ -92,13 +91,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
 
         override fun onChildRemoved(p0: DataSnapshot) {
-            Log.d(tag, "onChildRemoved")
-            mAdapter.notifyDataSetChanged()
+            p0.let{
+                val memoKey = it.key.toString()
+                val title = it.child("title").value.toString()
+                val text = it.child("text").value.toString()
+                val date = it.child("date").value as Long
+                model.list.remove(MemoListData(memoKey, date, title, text))
+            }
         }
 
     }
-
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -136,7 +138,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     public override fun onStart() { //유저의 정보가 없다면 다이얼로그 창을 띄워서 로그인을 유도한다.
         super.onStart()
-        // Check if user is signed in (non-null) and update UI accordingly.
         setUserInfo()
     }
 
@@ -200,15 +201,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         fab.setImageResource(android.R.drawable.ic_menu_delete)
         fab.setOnClickListener {
             mAdapter.setData.forEach {
-                FileManager(it.title).deleteFile()
-                model.list.remove(it)
+                database.child("user").child(model.userKey.get().toString()).child("memo").child(it.key).ref.removeValue()
             }
             mAdapter.notifyDataSetChanged()
-            mAdapter.setData.clear()
             Toast.makeText(this@MainActivity, R.string.text_delete, Toast.LENGTH_SHORT).show()
             onBackPressed()
         }
-        mAdapter.setData.clear()
         mAdapter.deleteMode = true
     }
 
@@ -280,29 +278,20 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 
         if (requestCode == MEMO) {
-            if (resultCode == MEMO_RENAME) {//rename 작성 보류
 
-//                model.list.removeAt(model.index.get())
+            data ?: return
 
+            val userKey = model.userKey.get()
+            val date = System.currentTimeMillis()
+            val title = data.getStringExtra("TITLE_NEW")
+            val text = data.getStringExtra("TEXT")
 
-                val userKey = model.userKey.get()
-                val memoKey = data!!.getStringExtra("KEY")
-                val date = System.currentTimeMillis()
-                val title = data.getStringExtra("TITLE_NEW")
-//                val titleBefore = data.getStringExtra("TITLE_BEFORE")
-                val text = data.getStringExtra("TEXT")
-
-                //데이터베이스 데이터 갱신
-                val memo = MemoListData(memoKey!!, date, title!!, text!! ) //메모 갱신
-//                database.orderByChild("user/${userKey}/memo/${memoKey}").ref.setValue(memo)
-                database.child("user").child(userKey!!).child("memo").child(memoKey).setValue(memo)//초기화
-//                database.child("user").child(model.order.toString()).child("memo").orderByChild()
+            if (resultCode == MEMO_RENAME) {
+                val memoKey = data.getStringExtra("KEY")
+                val memo = MemoListData(memoKey!!, date, title!!, text!! )
+                database.child("user").child(userKey!!).child("memo").child(memoKey).setValue(memo)
             }else if(resultCode == MEMO_WRITE){
-                val userKey = model.userKey.get()
                 val memoKey = database.child("user/${model.userKey.get().toString()}/memo").push().key
-                val date = System.currentTimeMillis()
-                val title = data?.getStringExtra("TITLE_NEW")
-                val text = data?.getStringExtra("TEXT")
                 if (memoKey == null) {
                     Log.w(tag, "Couldn't get push key for posts")
                     return
@@ -385,7 +374,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 }
             }
             database.orderByChild("user").addListenerForSingleValueEvent(listener)
-//            database.orderByChild("user").addChildEventListener(listener2)
         }
         invalidateOptionsMenu()
     }
@@ -398,11 +386,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
             R.id.fab -> {
                 openWriteActivity(null)
-
-//                var a = model.list.find {
-//                    it == MemoListData("-LxKsDzDFETbA7m4kl91",0,"","")
-//                }
-//                mAdapter.notifyDataSetChanged()
             }
         }
     }
@@ -411,7 +394,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         return map {
             if (block(it)) newValue else it
         }
-    }
+    }//새로운 가능성을 보임.
 
     override fun onDestroy() {
         database.orderByChild("user").removeEventListener(listener)
@@ -420,6 +403,5 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
         super.onDestroy()
     }
-
 
 }
