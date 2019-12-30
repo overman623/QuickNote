@@ -41,8 +41,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         Manifest.permission.WRITE_EXTERNAL_STORAGE)
     private val model : MainViewModel = MainViewModel()
 
-    private val mAdapter = TextListAdapter(model.list, object : TextListAdapter.Callback{
-        override fun getAction(item : TextListData?, index : Int) {
+    private val mAdapter = MemoListAdapter(model.list, object : MemoListAdapter.Callback{
+        override fun getAction(item : MemoListData?, index : Int) {
             model.index.set(index)
             openWriteActivity(item)
         }
@@ -55,24 +55,36 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private var memoListener : ChildEventListener = object : ChildEventListener{
 
         override fun onCancelled(p0: DatabaseError) {
+            Log.d(tag, "onCancelled")
         }
 
         override fun onChildMoved(p0: DataSnapshot, p1: String?) {
+            Log.d(tag, "onChildMoved")
         }
 
-        override fun onChildChanged(p0: DataSnapshot, p1: String?) {
+        override fun onChildChanged(p0: DataSnapshot, p1: String?) { //갱신된 데이터가 온다.
+
+            Log.d(tag, p0.toString())
+            model.list[model.index.get()].let{
+                it.key = p0.key.toString()
+                it.title = p0.child("title").value.toString()
+                it.text = p0.child("text").value.toString()
+                it.date = p0.child("date").value as Long
+            }
+            mAdapter.notifyDataSetChanged()
         }
 
         var num = 0
 
         override fun onChildAdded(p0: DataSnapshot, p1: String?) {
+
             p0.let{
                 val memoKey = it.key.toString()
                 val title = it.child("title").value.toString()
                 val text = it.child("text").value.toString()
                 val date = it.child("date").value as Long
                 model.list.add(
-                    num++, TextListData(memoKey, date, title, text)
+                    num++, MemoListData(memoKey, date, title, text)
                 )
                 mAdapter.notifyDataSetChanged()
             }
@@ -80,9 +92,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
 
         override fun onChildRemoved(p0: DataSnapshot) {
+            Log.d(tag, "onChildRemoved")
+            mAdapter.notifyDataSetChanged()
         }
 
     }
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -209,7 +225,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         mAdapter.notifyDataSetChanged()
     }
 
-    fun openWriteActivity(item : TextListData?) {
+    fun openWriteActivity(item : MemoListData?) {
         val intent = Intent(this, MemoActivity::class.java)
         startActivityForResult(intent.apply {
             item?.let {
@@ -261,73 +277,29 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun loadMemos(dataSnapshot : DataSnapshot){
-        var num = 0
-        model.list.clear()
-        dataSnapshot.child("memo").let{
-            it.children.forEach { child ->
-                val memoKey = child.key.toString()
-                val title = child.child("title").value.toString()
-                val text = child.child("text").value.toString()
-                val date = child.child("date").value as Long
-                model.list.add(
-                    num++, TextListData(memoKey, date, title, text)
-                )
-            }
-            mAdapter.notifyDataSetChanged()
-        }
-
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 
         if (requestCode == MEMO) {
-
-            val query = database.orderByChild("user/${model.userKey.get().toString()}/memo")
-
-//                .child(model.userKey.get().toString())
-//                .orderByChild("memo")
-
             if (resultCode == MEMO_RENAME) {//rename 작성 보류
+
 //                model.list.removeAt(model.index.get())
 
-                data?.let{
-                    it.getStringExtra("TITLE_NEW")
-                    it.getStringExtra("TITLE_BEFORE")
-                    model.list[model.index.get()].title
-                }
-
-                query.addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onCancelled(p0: DatabaseError) {
-
-                    }
-
-                    override fun onDataChange(p0: DataSnapshot) {
-                        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-                    }
-
-                })
-
-
-                //데이터베이스 데이터 갱신
-                val memo = TextListData(
-                    data?.getStringExtra("KEY")!!,
-                    data.getLongExtra("FILE_MAKE_DATE", 0),
-                    data.getStringExtra("FILE_NAME")!!,
-                    data.getStringExtra("FILE_READ_LINE")!!
-                    ) //메모 갱신
-//                database.child("user").child(model.order.toString()).child("memo").child().setValue(memo)//초기화
-//                database.child("user").child(model.order.toString()).child("memo").orderByChild()
-            }else{
-
-                //무조건 키값이 없음.
-                //데이터베이스 데이터 추가
-                //새로운 키를 추가
 
                 val userKey = model.userKey.get()
+                val memoKey = data!!.getStringExtra("KEY")
+                val date = System.currentTimeMillis()
+                val title = data.getStringExtra("TITLE_NEW")
+//                val titleBefore = data.getStringExtra("TITLE_BEFORE")
+                val text = data.getStringExtra("TEXT")
+
+                //데이터베이스 데이터 갱신
+                val memo = MemoListData(memoKey!!, date, title!!, text!! ) //메모 갱신
+//                database.orderByChild("user/${userKey}/memo/${memoKey}").ref.setValue(memo)
+                database.child("user").child(userKey!!).child("memo").child(memoKey).setValue(memo)//초기화
+//                database.child("user").child(model.order.toString()).child("memo").orderByChild()
+            }else if(resultCode == MEMO_WRITE){
+                val userKey = model.userKey.get()
                 val memoKey = database.child("user/${model.userKey.get().toString()}/memo").push().key
-                Log.d(tag, "userKey : " + userKey)
-                Log.d(tag, "memoKey : " + memoKey)
                 val date = System.currentTimeMillis()
                 val title = data?.getStringExtra("TITLE_NEW")
                 val text = data?.getStringExtra("TEXT")
@@ -335,14 +307,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     Log.w(tag, "Couldn't get push key for posts")
                     return
                 }
-                val memo = TextListData(memoKey, date, title!!, text!!) //신규 유저 추가
+                val memo = MemoListData(memoKey, date, title!!, text!!) //신규 유저 추가
                 val memoValues = memo.toMap()
                 val childUpdates = HashMap<String, Any>()
                 childUpdates["/user/$userKey/memo/$memoKey"] = memoValues
                 database.updateChildren(childUpdates)
-
             }
-            mAdapter.notifyDataSetChanged()
         }else if(requestCode == 100){
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try { // 구글 로그인 성공
@@ -391,7 +361,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                             if(currentUser.uid == now.child("uid").value){
                                 model.userKey.set(now.key)
                                 database.child("user").child(now.key!!).child("memo").addChildEventListener(memoListener)
-//                                loadMemos(now, now.key)
                                 return
                             }
                         }
@@ -429,9 +398,27 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
             R.id.fab -> {
                 openWriteActivity(null)
-//                writeNewUser("test", "123456")
+
+//                var a = model.list.find {
+//                    it == MemoListData("-LxKsDzDFETbA7m4kl91",0,"","")
+//                }
+//                mAdapter.notifyDataSetChanged()
             }
         }
+    }
+
+    fun <T> List<T>.replace(newValue: T, block: (T) -> Boolean): List<T> {
+        return map {
+            if (block(it)) newValue else it
+        }
+    }
+
+    override fun onDestroy() {
+        database.orderByChild("user").removeEventListener(listener)
+        model.userKey.get()?.let{
+            database.child("user").child(it).child("memo").removeEventListener(memoListener)
+        }
+        super.onDestroy()
     }
 
 

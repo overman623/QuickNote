@@ -4,9 +4,7 @@ import com.google.firebase.database.Exclude
 import com.google.firebase.database.IgnoreExtraProperties
 
 @IgnoreExtraProperties
-data class TextListData(var key: String="", var date: Long, var title: String = "", var text: String = ""){
-
-//    constructor() : this( "", 0, "", "")
+data class MemoListData(var key: String="", var date: Long, var title: String = "", var text: String = ""){
 
     @Exclude
     fun toMap(): Map<String, Any?> {

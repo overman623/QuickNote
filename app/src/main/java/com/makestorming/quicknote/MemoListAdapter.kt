@@ -8,11 +8,11 @@ import kotlinx.android.synthetic.main.layout_text_item.view.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-class TextListAdapter(items: MutableList<TextListData>, private val connector: Callback ) : RecyclerView.Adapter<TextListAdapter.MainViewHolder>(){
+class MemoListAdapter(items: MutableList<MemoListData>, private val connector: Callback ) : RecyclerView.Adapter<MemoListAdapter.MainViewHolder>(){
 
-    private val tag = TextListAdapter::class.java.simpleName
-    private var items : MutableList<TextListData>? = items
-    val setData : MutableSet<TextListData> = mutableSetOf()
+    private val tag = MemoListAdapter::class.java.simpleName
+    private var items : MutableList<MemoListData>? = items
+    val setData : MutableSet<MemoListData> = mutableSetOf()
     var deleteMode = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = MainViewHolder(parent)
@@ -23,7 +23,7 @@ class TextListAdapter(items: MutableList<TextListData>, private val connector: C
     override fun getItemCount(): Int = items!!.size
 
     interface Callback{
-        fun getAction(item : TextListData?, index : Int)
+        fun getAction(item : MemoListData?, index : Int)
     }
 
     override fun onBindViewHolder(holder: MainViewHolder, position: Int) {

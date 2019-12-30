@@ -2,15 +2,14 @@ package com.makestorming.quicknote
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import com.makestorming.quicknote.config.FileManager
 import com.makestorming.quicknote.dialog.DialogFontSize
 import com.makestorming.quicknote.dialog.DialogSave
 import kotlinx.android.synthetic.main.activity_memo.*
 import kotlinx.android.synthetic.main.content_memo.*
-import java.io.File
 
 /*
 
@@ -23,7 +22,6 @@ class MemoActivity : AppCompatActivity() {
     val tag = MemoActivity::class.java.name
 
     private var memoKey : String? = ""
-    private var date : String? = null
     private var nowTitle : String? = ""
     private var text : String? = ""
     
@@ -33,7 +31,6 @@ class MemoActivity : AppCompatActivity() {
 
         intent.apply {
             memoKey = getStringExtra("KEY")
-            date = getStringExtra("DATE")
             nowTitle = getStringExtra("TITLE")?.let {
                 text = getStringExtra("TEXT")
                 it
@@ -88,8 +85,10 @@ class MemoActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         if(editText.text.toString() == text){
+            Log.d(tag, "equals")
             super.onBackPressed()
         }else{
+            Log.d(tag, "not equals")
             showDialogSave(true)
         }
     }
@@ -102,7 +101,7 @@ class MemoActivity : AppCompatActivity() {
             object : DialogSave.Callback {
                 override fun getTitle(nowTitle : String, newTitle: String?) {
                     val keyWord = if(nowTitle.isEmpty()){
-                        FILE_WRITE
+                        MEMO_WRITE
                     }else{
                         MEMO_RENAME
                     }
@@ -148,12 +147,6 @@ class MemoActivity : AppCompatActivity() {
             putExtra("TITLE_BEFORE", beforeTitle)
             putExtra("TITLE_NEW", newTitle)
             putExtra("TEXT", editText.text.toString())
-        }
-    }
-
-    private fun saveText(newTitle: String?, beforeTitle: String?) : File {
-        FileManager(newTitle!!, beforeTitle!!).apply {
-            return makeFile(date, editText.text.toString())
         }
     }
 
