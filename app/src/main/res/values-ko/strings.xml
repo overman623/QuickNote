@@ -2,7 +2,7 @@
     <string name="app_name">빠른메모</string>
     <string name="action_settings">설정</string>
     <string name="action_font_size">글자 크기</string>
-    <string name="text_center">새로운 메모를 만들 수 있습니다.</string>
+    <string name="text_new_memo">새로운 메모를 만들 수 있습니다.</string>
     <string name="action_erase_all">전부 지우기</string>
     <string name="action_sort_by_date">최신날짜별 정렬</string>
     <string name="action_sort_by_date_reverse">예전날짜별 정렬</string>
@@ -30,6 +30,8 @@
     <string name="text_not_permission">권한이 허가되지 않았습니다.</string>
     <string name="text_delete">메모가 삭제되었습니다.</string>
     <string name="text_delete_none">삭제를 원하는 메모를 선택해주세요.</string>
+
+    <string name="text_memo_loading">메모를 불러오는 중입니다.</string>
 
     <string name="text_size_title">글씨 크기 설정</string>
     <string name="text_size_small">작게</string>

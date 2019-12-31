@@ -84,6 +84,11 @@ class MainActivity : AppCompatActivity(){
                 model.listNum.set(num)
                 mAdapter.notifyDataSetChanged()
 
+                if(model.list.size == 0){
+                    textCenter.text = getString(R.string.text_new_memo)
+                }else{
+                    textCenter.text = ""
+                }
             }
 
         }
@@ -98,6 +103,11 @@ class MainActivity : AppCompatActivity(){
             }
             mAdapter.notifyDataSetChanged()
 
+            if(model.list.size == 0){
+                textCenter.text = getString(R.string.text_new_memo)
+            }else{
+                textCenter.text = ""
+            }
         }
 
     }
@@ -356,6 +366,8 @@ class MainActivity : AppCompatActivity(){
                         it.children.forEach {now ->
                             if(currentUser.uid == now.child("uid").value){
                                 model.userKey.set(now.key)
+                                //loading start
+                                textCenter.text = getString(R.string.text_memo_loading)
                                 database.child("user").child(now.key!!).child("memo").addChildEventListener(memoListener)
                                 return
                             }

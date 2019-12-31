@@ -19,15 +19,13 @@
     tools:context=".MainActivity"
     tools:showIn="@layout/activity_main">
 
-<!--
     <TextView
         android:id="@+id/textCenter"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
-        android:visibility="@{vm.list.size() == 0 ? View.VISIBLE : View.GONE}"
         android:textSize="24sp"
-        />-->
+        />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/textViewList"

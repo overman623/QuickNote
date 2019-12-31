@@ -2,7 +2,7 @@
     <string name="app_name">QuickMemo</string>
     <string name="action_settings">Settings</string>
     <string name="action_font_size">Font Size</string>
-    <string name="text_center">You can create a new memo.</string>
+    <string name="text_new_memo">You can create a new memo.</string>
     <string name="action_erase_all">Erase All</string>
     <string name="action_sort_by_date">Sort recently</string>
     <string name="action_delete_memo">delete memo</string>
@@ -31,6 +31,7 @@
     <string name="text_delete_none">Choose the memo you want to delete </string>
     <string name="snackbar_text_delete">Select a note to delete and tap the trash can icon at the bottom to delete it.</string>
 
+    <string name="text_memo_loading">The note is being loaded.</string>
 
     <string name="text_size_title">Text Size</string>
     <string name="text_size_small">small</string>
