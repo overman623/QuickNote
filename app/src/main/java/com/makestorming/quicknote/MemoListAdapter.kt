@@ -51,4 +51,6 @@ class MemoListAdapter(items: MutableList<MemoListData>, private val connector: C
         }
     }
 
+
+
 }

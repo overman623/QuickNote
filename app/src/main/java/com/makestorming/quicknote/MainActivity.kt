@@ -1,16 +1,14 @@
 package com.makestorming.quicknote
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -18,32 +16,25 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.*
 import com.makestorming.quicknote.config.DoubleClickPreventListener
-import com.makestorming.quicknote.config.PermissionsChecker
 import com.makestorming.quicknote.database.User
 import com.makestorming.quicknote.databinding.ActivityMainBinding
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import java.util.*
 
-/*
-
-//구글 인증이 끝났으면, 구글 인증정보를 데이터 베이스에 저장한다.
-
-*/
 
 class MainActivity : AppCompatActivity(){
     private val tag : String = MainActivity::class.java.simpleName
-    private val permissions : Array<String> = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE)
     private val model : MainViewModel = MainViewModel()
 
     private val mAdapter = MemoListAdapter(model.list, object : MemoListAdapter.Callback{
         override fun getAction(item : MemoListData?, index : Int) {
-            model.index.set(index)
+            model.position.set(index)
             openWriteActivity(item)
         }
     })
@@ -52,6 +43,7 @@ class MainActivity : AppCompatActivity(){
     private lateinit var auth: FirebaseAuth// ...
     lateinit var googleSignInClient : GoogleSignInClient //구글 로그인을 관리하는 클래스
     private lateinit var listener : ValueEventListener
+
     private val memoListener : ChildEventListener = object : ChildEventListener{
 
         override fun onCancelled(p0: DatabaseError) {
@@ -64,16 +56,17 @@ class MainActivity : AppCompatActivity(){
 
         override fun onChildChanged(p0: DataSnapshot, p1: String?) { //갱신된 데이터가 온다.
 
-            model.list[model.index.get()].let{
+            model.list[model.position.get()].let{
                 it.key = p0.key.toString()
                 it.title = p0.child("title").value.toString()
                 it.text = p0.child("text").value.toString()
                 it.date = p0.child("date").value as Long
             }
             mAdapter.notifyDataSetChanged()
+
         }
 
-        var num = 0
+        var num = model.listNum.get()
 
         override fun onChildAdded(p0: DataSnapshot, p1: String?) {
 
@@ -82,10 +75,15 @@ class MainActivity : AppCompatActivity(){
                 val title = it.child("title").value.toString()
                 val text = it.child("text").value.toString()
                 val date = it.child("date").value as Long
+
+                if(num > model.list.size) num = 0
+
                 model.list.add(
                     num++, MemoListData(memoKey, date, title, text)
                 )
+                model.listNum.set(num)
                 mAdapter.notifyDataSetChanged()
+
             }
 
         }
@@ -99,6 +97,7 @@ class MainActivity : AppCompatActivity(){
                 model.list.remove(MemoListData(memoKey, date, title, text))
             }
             mAdapter.notifyDataSetChanged()
+
         }
 
     }
@@ -114,7 +113,6 @@ class MainActivity : AppCompatActivity(){
                     openWriteActivity(null)
                 }
             }
-
         }
 
     }
@@ -126,13 +124,6 @@ class MainActivity : AppCompatActivity(){
         binding.lifecycleOwner = this
 
         setSupportActionBar(toolbar)
-
-        PermissionsChecker(this).apply {
-            if(lacksPermissions(permissions)){
-                ActivityCompat.requestPermissions(this@MainActivity, permissions, MY_PERMISSIONS_REQUEST_READ_CONTACTS)
-            }
-        }//파일 쓰기 권한은 없앨 예정임.
-
         textViewList.apply {
             adapter = mAdapter
             layoutManager = LinearLayoutManager(this@MainActivity)
@@ -163,11 +154,12 @@ class MainActivity : AppCompatActivity(){
         googleSignInClient.signOut()
         val currentUser = auth.currentUser
         if (currentUser == null) {
-            Toast.makeText(this, "Sign out", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.action_sign_out, Toast.LENGTH_SHORT).show()
             model.email.set(null)
             model.userKey.set(null)
             model.uid.set(null)
-            model.index.set(0)
+            model.position.set(0)
+            model.listNum.set(0)
             model.list.clear()
             model.verified.set(false)
         }
@@ -176,8 +168,10 @@ class MainActivity : AppCompatActivity(){
     override fun onBackPressed() {
         if(mAdapter.deleteMode){
             mAdapter.deleteMode = false
+            mAdapter.notifyDataSetChanged()
             fab.setImageResource(android.R.drawable.ic_menu_edit)
             fab.setOnClickListener(clickListener)
+            invalidateOptionsMenu()
         }else{
             super.onBackPressed()
         }
@@ -186,7 +180,11 @@ class MainActivity : AppCompatActivity(){
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         if(model.verified.get()){
-            menuInflater.inflate(R.menu.menu_main, menu)
+            if(mAdapter.deleteMode){
+                menuInflater.inflate(R.menu.menu_main_delete, menu)
+            }else{
+                menuInflater.inflate(R.menu.menu_main, menu)
+            }
         }
         return true
     }
@@ -196,8 +194,22 @@ class MainActivity : AppCompatActivity(){
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
+            R.id.action_new_memo-> {
+                openWriteActivity(null)
+                true
+            }
+            R.id.action_delete_cancel-> {
+                onBackPressed()
+                true
+            }
             R.id.action_delete_memo -> {
                 deleteMemo()
+                val snackBar = Snackbar.make(
+                    fab, R.string.snackbar_text_delete, Snackbar.LENGTH_LONG
+                )
+                snackBar.setAction("OK") { snackBar.dismiss() }
+                snackBar.show()
+                invalidateOptionsMenu()
                 true
             }
             R.id.action_sort_by_date -> {
@@ -220,11 +232,26 @@ class MainActivity : AppCompatActivity(){
     private fun deleteMemo() {
         fab.setImageResource(android.R.drawable.ic_menu_delete)
         fab.setOnClickListener {
-            mAdapter.setData.forEach {
-                database.child("user").child(model.userKey.get().toString()).child("memo").child(it.key).ref.removeValue()
+            if(mAdapter.setData.size == 0){
+                Toast.makeText(this@MainActivity, R.string.text_delete_none, Toast.LENGTH_SHORT).show()
+            }else{
+                val alertDialog = AlertDialog.Builder(this@MainActivity)
+                alertDialog.setTitle(R.string.dialog_text_delete_title)
+                alertDialog.setMessage(String.format(getString(R.string.dialog_text_delete_message), mAdapter.setData.size))
+                alertDialog.setPositiveButton(R.string.dialog_text_delete_ok) { _, _ ->
+                    mAdapter.setData.forEach {
+                        database.child("user").child(model.userKey.get().toString()).child("memo").child(it.key).ref.removeValue()
+                    }
+                    Toast.makeText(this@MainActivity, R.string.text_delete, Toast.LENGTH_SHORT).show()
+                    onBackPressed()
+                }
+                alertDialog.setNegativeButton(R.string.dialog_text_delete_cancel){ _, _ ->
+                    onBackPressed()
+                    mAdapter.notifyDataSetChanged()
+                }
+                alertDialog.show()
             }
-            Toast.makeText(this@MainActivity, R.string.text_delete, Toast.LENGTH_SHORT).show()
-            onBackPressed()
+
         }
         mAdapter.deleteMode = true
     }
@@ -251,46 +278,6 @@ class MainActivity : AppCompatActivity(){
                 putExtra("TEXT", it.text)
             }
         }, MEMO)
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int,
-                                            permissions: Array<String>, grantResults: IntArray) {
-        when (requestCode) {
-            MY_PERMISSIONS_REQUEST_READ_CONTACTS -> {
-                // If request is cancelled, the result arrays are empty.
-                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-                } else {
-                    if (ActivityCompat.shouldShowRequestPermissionRationale(this@MainActivity,
-                            Manifest.permission.READ_CONTACTS)) {
-                        // Show an explanation to the user *asynchronously* -- don't block
-                        // this thread waiting for the user's response! After the user
-                        // sees the explanation, try again to request the permission.
-                    } else {
-                        // No explanation needed, we can request the permission.
-                        ActivityCompat.requestPermissions(this@MainActivity,
-                            permissions,
-                            MY_PERMISSIONS_REQUEST_READ_CONTACTS)
-
-                        // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                        // app-defined int constant. The callback method gets the
-                        // result of the request.
-                    }
-                    Toast.makeText(this, R.string.text_not_permission, Toast.LENGTH_SHORT).show()
-                    finish()
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-                }
-                return
-            }
-
-            // Add other 'when' lines to check for other
-            // permissions this app might request.
-            else -> {
-                // Ignore all other requests.
-            }
-        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -340,13 +327,13 @@ class MainActivity : AppCompatActivity(){
                 if (task.isSuccessful) { // 로그인 성공
                     Toast.makeText(
                         this@MainActivity,
-                        "로그인 성공",
+                        R.string.action_sign_in,
                         Toast.LENGTH_SHORT
                     ).show()
                     setUserInfo()
 
                 } else { // 로그인 실패
-                    Toast.makeText(this@MainActivity, "로그인 실패", Toast.LENGTH_SHORT)
+                    Toast.makeText(this@MainActivity, R.string.action_sign_in_fail, Toast.LENGTH_SHORT)
                         .show()
                 }
             }
@@ -360,6 +347,7 @@ class MainActivity : AppCompatActivity(){
             model.verified.set(currentUser.isEmailVerified)
 
             listener = object : ValueEventListener { //메모쪽만 실행해서 반복하면 된다.
+
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                     dataSnapshot.child("user").let {
 
@@ -367,7 +355,6 @@ class MainActivity : AppCompatActivity(){
 
                         it.children.forEach {now ->
                             if(currentUser.uid == now.child("uid").value){
-
                                 model.userKey.set(now.key)
                                 database.child("user").child(now.key!!).child("memo").addChildEventListener(memoListener)
                                 return
@@ -379,6 +366,7 @@ class MainActivity : AppCompatActivity(){
                             Log.w(tag, "Couldn't get push key for posts")
                             return
                         }
+
                         model.userKey.set(key)
                         database.child("user").child(key).child("memo").addChildEventListener(memoListener)
                         val user = User(currentUser.email, currentUser.uid) //신규 유저 추가
@@ -388,35 +376,23 @@ class MainActivity : AppCompatActivity(){
                         database.updateChildren(childUpdates)
                     }
                 }
+
                 override fun onCancelled(databaseError: DatabaseError) {
                     // Getting Post failed, log a message
                     Log.w(tag, "loadPost:onCancelled", databaseError.toException())
                 }
             }
             database.orderByChild("user").addListenerForSingleValueEvent(listener)
+
         }
         invalidateOptionsMenu()
     }
-
-
-/*    override fun onClick(view: View?) {
-
-        when(view!!.id){
-            R.id.buttonGoogle -> {
-                val signInIntent = googleSignInClient.signInIntent
-                startActivityForResult(signInIntent,100)
-            }
-            R.id.fab -> {
-                openWriteActivity(null)
-            }
-        }
-    }*/
 
     fun <T> List<T>.replace(newValue: T, block: (T) -> Boolean): List<T> {
         return map {
             if (block(it)) newValue else it
         }
-    }//새로운 가능성을 보임.
+    } //새로운 가능성을 보임.
 
     override fun onDestroy() {
         database.orderByChild("user").removeEventListener(listener)

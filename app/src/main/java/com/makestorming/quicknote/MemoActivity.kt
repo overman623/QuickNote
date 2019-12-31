@@ -5,17 +5,13 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import com.makestorming.quicknote.config.DoubleClickPreventListener
 import com.makestorming.quicknote.dialog.DialogFontSize
 import com.makestorming.quicknote.dialog.DialogSave
 import kotlinx.android.synthetic.main.activity_memo.*
 import kotlinx.android.synthetic.main.content_memo.*
-
-/*
-
-LiveData를 공유하는 무언가가 있었으면 좋을것 같음.
-
-*/
 
 class MemoActivity : AppCompatActivity() {
 
@@ -24,7 +20,14 @@ class MemoActivity : AppCompatActivity() {
     private var memoKey : String? = ""
     private var nowTitle : String? = ""
     private var text : String? = ""
-    
+
+
+    private val clickListener = object : DoubleClickPreventListener(){
+        override fun onSingleClick(v: View?) {
+            showDialogSave(false) //toast
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_memo)
@@ -40,9 +43,7 @@ class MemoActivity : AppCompatActivity() {
         title = if(nowTitle == "") getString(R.string.text_new_file)
                 else nowTitle
 
-        fab.setOnClickListener {
-            showDialogSave(false) //toast
-        }
+        fab.setOnClickListener (clickListener)
 
         //title write
         editText.setText(text)

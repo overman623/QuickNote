@@ -12,7 +12,6 @@ abstract class DoubleClickPreventListener : View.OnClickListener {
         val currentClickTime = SystemClock.uptimeMillis()
         val elapsedTime = currentClickTime - mLastClickTime
         mLastClickTime = currentClickTime
-        // 중복 클릭인 경우
         if (elapsedTime <= MIN_CLICK_INTERVAL) {
             return
         }
@@ -21,7 +20,6 @@ abstract class DoubleClickPreventListener : View.OnClickListener {
     }
 
     companion object {
-        // 중복 클릭 방지 시간 설정
         private const val MIN_CLICK_INTERVAL: Long = 1000
     }
 }

@@ -3,6 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.makestorming.quicknote.MainActivity">
 
+
+    <item
+        android:id="@+id/action_new_memo"
+        android:orderInCategory="100"
+        android:title="@string/action_new_memo"
+        app:showAsAction="never" />
+
     <item
         android:id="@+id/action_delete_memo"
         android:orderInCategory="100"
