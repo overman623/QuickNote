@@ -27,7 +27,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import java.util.*
 
-
 class MainActivity : AppCompatActivity(){
     private val tag : String = MainActivity::class.java.simpleName
     private val model : MainViewModel = MainViewModel()
@@ -69,6 +68,8 @@ class MainActivity : AppCompatActivity(){
         var num = model.listNum.get()
 
         override fun onChildAdded(p0: DataSnapshot, p1: String?) {
+
+            Log.d(tag, p0.toString())
 
             p0.let{
                 val memoKey = it.key.toString()
@@ -127,6 +128,8 @@ class MainActivity : AppCompatActivity(){
 
     }
 
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding : ActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
@@ -147,6 +150,7 @@ class MainActivity : AppCompatActivity(){
             .build().let {
                 googleSignInClient = GoogleSignIn.getClient(this, it)
             }
+
         buttonGoogle.setOnClickListener(clickListener)
         fab.setOnClickListener(clickListener)
 
@@ -160,6 +164,11 @@ class MainActivity : AppCompatActivity(){
     }
 
     private fun signOut(){
+        textCenter.text = ""
+        database.orderByChild("user").removeEventListener(listener)
+        model.userKey.get()?.let{
+            database.child("user").child(it).child("memo").removeEventListener(memoListener)
+        }
         auth.signOut()
         googleSignInClient.signOut()
         val currentUser = auth.currentUser
@@ -341,7 +350,6 @@ class MainActivity : AppCompatActivity(){
                         Toast.LENGTH_SHORT
                     ).show()
                     setUserInfo()
-
                 } else { // 로그인 실패
                     Toast.makeText(this@MainActivity, R.string.action_sign_in_fail, Toast.LENGTH_SHORT)
                         .show()
@@ -367,7 +375,9 @@ class MainActivity : AppCompatActivity(){
                             if(currentUser.uid == now.child("uid").value){
                                 model.userKey.set(now.key)
                                 //loading start
-                                textCenter.text = getString(R.string.text_memo_loading)
+//                                textCenter.text = getString(R.string.text_memo_loading)
+                                textCenter.text = getString(R.string.text_new_memo)
+                                Log.d(tag, "set listener")
                                 database.child("user").child(now.key!!).child("memo").addChildEventListener(memoListener)
                                 return
                             }
@@ -399,15 +409,18 @@ class MainActivity : AppCompatActivity(){
         }
         invalidateOptionsMenu()
     }
-
+/*
     fun <T> List<T>.replace(newValue: T, block: (T) -> Boolean): List<T> {
         return map {
             if (block(it)) newValue else it
         }
     } //새로운 가능성을 보임.
+*/
 
     override fun onDestroy() {
-        database.orderByChild("user").removeEventListener(listener)
+        database.orderByChild("user").apply {
+            removeEventListener(listener)
+        }
         model.userKey.get()?.let{
             database.child("user").child(it).child("memo").removeEventListener(memoListener)
         }
