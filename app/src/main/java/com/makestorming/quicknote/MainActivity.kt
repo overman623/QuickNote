@@ -10,6 +10,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -27,23 +29,19 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import java.util.*
 
-class MainActivity : AppCompatActivity(){
-    private val tag : String = MainActivity::class.java.simpleName
-    private val model : MainViewModel = MainViewModel()
+class MainActivity : AppCompatActivity() {
+    private val tag: String = MainActivity::class.java.simpleName
+//    private val model: MainViewModel = MainViewModel()
+    private lateinit var model: MainViewModel
+    private lateinit var mAdapter: MemoListAdapter
 
-    private val mAdapter = MemoListAdapter(model.list, object : MemoListAdapter.Callback{
-        override fun getAction(item : MemoListData?, index : Int) {
-            model.position.set(index)
-            openWriteActivity(item)
-        }
-    })
+    private lateinit var database: DatabaseReference // ...
+    private lateinit var auth: FirebaseAuth // ...
+    lateinit var googleSignInClient: GoogleSignInClient //구글 로그인을 관리하는 클래스
+    private lateinit var listener: ValueEventListener
+    var num :Int = 0
 
-    private lateinit var database: DatabaseReference// ...
-    private lateinit var auth: FirebaseAuth// ...
-    lateinit var googleSignInClient : GoogleSignInClient //구글 로그인을 관리하는 클래스
-    private lateinit var listener : ValueEventListener
-
-    private val memoListener : ChildEventListener = object : ChildEventListener{
+    private val memoListener: ChildEventListener = object : ChildEventListener {
 
         override fun onCancelled(p0: DatabaseError) {
             Log.d(tag, "onCancelled")
@@ -55,7 +53,7 @@ class MainActivity : AppCompatActivity(){
 
         override fun onChildChanged(p0: DataSnapshot, p1: String?) { //갱신된 데이터가 온다.
 
-            model.list[model.position.get()].let{
+            model.list[model.position.get()].let {
                 it.key = p0.key.toString()
                 it.title = p0.child("title").value.toString()
                 it.text = p0.child("text").value.toString()
@@ -65,19 +63,19 @@ class MainActivity : AppCompatActivity(){
 
         }
 
-        var num = model.listNum.get()
+
 
         override fun onChildAdded(p0: DataSnapshot, p1: String?) {
 
             Log.d(tag, p0.toString())
 
-            p0.let{
+            p0.let {
                 val memoKey = it.key.toString()
                 val title = it.child("title").value.toString()
                 val text = it.child("text").value.toString()
                 val date = it.child("date").value as Long
 
-                if(num > model.list.size) num = 0
+                if (num > model.list.size) num = 0
 
                 model.list.add(
                     num++, MemoListData(memoKey, date, title, text)
@@ -85,9 +83,9 @@ class MainActivity : AppCompatActivity(){
                 model.listNum.set(num)
                 mAdapter.notifyDataSetChanged()
 
-                if(model.list.size == 0){
+                if (model.list.size == 0) {
                     textCenter.text = getString(R.string.text_new_memo)
-                }else{
+                } else {
                     textCenter.text = ""
                 }
             }
@@ -95,7 +93,7 @@ class MainActivity : AppCompatActivity(){
         }
 
         override fun onChildRemoved(p0: DataSnapshot) {
-            p0.let{
+            p0.let {
                 val memoKey = it.key.toString()
                 val title = it.child("title").value.toString()
                 val text = it.child("text").value.toString()
@@ -104,35 +102,44 @@ class MainActivity : AppCompatActivity(){
             }
             mAdapter.notifyDataSetChanged()
 
-            if(model.list.size == 0){
+            if (model.list.size == 0) {
                 textCenter.text = getString(R.string.text_new_memo)
-            }else{
+            } else {
                 textCenter.text = ""
             }
         }
-
     }
 
-    private val clickListener = object : DoubleClickPreventListener(){
+    private val clickListener = object : DoubleClickPreventListener() {
         override fun onSingleClick(v: View?) {
-            when(v!!.id){
+            when (v!!.id) {
                 R.id.buttonGoogle -> {
                     val signInIntent = googleSignInClient.signInIntent
-                    startActivityForResult(signInIntent,100)
+                    startActivityForResult(signInIntent, 100)
                 }
                 R.id.fab -> {
                     openWriteActivity(null)
                 }
             }
         }
-
     }
-
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val binding : ActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        model = ViewModelProviders.of(this@MainActivity).get(MainViewModel::class.java)
+//        model = MainViewModel()
+        mAdapter = MemoListAdapter(model.list, object : MemoListAdapter.Callback {
+            override fun getAction(item: MemoListData?, index: Int) {
+                model.position.set(index)
+                openWriteActivity(item)
+            }
+        })
+
+        val binding: ActivityMainBinding =
+            DataBindingUtil.setContentView(this, R.layout.activity_main)
+
+
         binding.vm = model
         binding.lifecycleOwner = this
 
@@ -142,6 +149,8 @@ class MainActivity : AppCompatActivity(){
             layoutManager = LinearLayoutManager(this@MainActivity)
             setHasFixedSize(true)
         }
+        num = model.listNum.get()
+
 
         auth = FirebaseAuth.getInstance()
         GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -163,10 +172,10 @@ class MainActivity : AppCompatActivity(){
         setUserInfo()
     }
 
-    private fun signOut(){
+    private fun signOut() {
         textCenter.text = ""
         database.orderByChild("user").removeEventListener(listener)
-        model.userKey.get()?.let{
+        model.userKey.get()?.let {
             database.child("user").child(it).child("memo").removeEventListener(memoListener)
         }
         auth.signOut()
@@ -185,23 +194,23 @@ class MainActivity : AppCompatActivity(){
     }
 
     override fun onBackPressed() {
-        if(mAdapter.deleteMode){
+        if (mAdapter.deleteMode) {
             mAdapter.deleteMode = false
             mAdapter.notifyDataSetChanged()
             fab.setImageResource(android.R.drawable.ic_menu_edit)
             fab.setOnClickListener(clickListener)
             invalidateOptionsMenu()
-        }else{
+        } else {
             super.onBackPressed()
         }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
-        if(model.verified.get()){
-            if(mAdapter.deleteMode){
+        if (model.verified.get()) {
+            if (mAdapter.deleteMode) {
                 menuInflater.inflate(R.menu.menu_main_delete, menu)
-            }else{
+            } else {
                 menuInflater.inflate(R.menu.menu_main, menu)
             }
         }
@@ -213,11 +222,11 @@ class MainActivity : AppCompatActivity(){
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_new_memo-> {
+            R.id.action_new_memo -> {
                 openWriteActivity(null)
                 true
             }
-            R.id.action_delete_cancel-> {
+            R.id.action_delete_cancel -> {
                 onBackPressed()
                 true
             }
@@ -251,20 +260,28 @@ class MainActivity : AppCompatActivity(){
     private fun deleteMemo() {
         fab.setImageResource(android.R.drawable.ic_menu_delete)
         fab.setOnClickListener {
-            if(mAdapter.setData.size == 0){
-                Toast.makeText(this@MainActivity, R.string.text_delete_none, Toast.LENGTH_SHORT).show()
-            }else{
+            if (mAdapter.setData.size == 0) {
+                Toast.makeText(this@MainActivity, R.string.text_delete_none, Toast.LENGTH_SHORT)
+                    .show()
+            } else {
                 val alertDialog = AlertDialog.Builder(this@MainActivity)
                 alertDialog.setTitle(R.string.dialog_text_delete_title)
-                alertDialog.setMessage(String.format(getString(R.string.dialog_text_delete_message), mAdapter.setData.size))
+                alertDialog.setMessage(
+                    String.format(
+                        getString(R.string.dialog_text_delete_message),
+                        mAdapter.setData.size
+                    )
+                )
                 alertDialog.setPositiveButton(R.string.dialog_text_delete_ok) { _, _ ->
                     mAdapter.setData.forEach {
-                        database.child("user").child(model.userKey.get().toString()).child("memo").child(it.key).ref.removeValue()
+                        database.child("user").child(model.userKey.get().toString()).child("memo")
+                            .child(it.key).ref.removeValue()
                     }
-                    Toast.makeText(this@MainActivity, R.string.text_delete, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, R.string.text_delete, Toast.LENGTH_SHORT)
+                        .show()
                     onBackPressed()
                 }
-                alertDialog.setNegativeButton(R.string.dialog_text_delete_cancel){ _, _ ->
+                alertDialog.setNegativeButton(R.string.dialog_text_delete_cancel) { _, _ ->
                     onBackPressed()
                     mAdapter.notifyDataSetChanged()
                 }
@@ -275,20 +292,20 @@ class MainActivity : AppCompatActivity(){
         mAdapter.deleteMode = true
     }
 
-    private fun sortMemoDate(isReverse : Boolean) {
+    private fun sortMemoDate(isReverse: Boolean) {
         model.list.sortWith(Comparator { t1, t2 ->
             val date: Long = t1.date
             val date1: Long = t2.date
-            if(isReverse){
+            if (isReverse) {
                 date.compareTo(date1)
-            }else{
+            } else {
                 date1.compareTo(date)
             }
         })
         mAdapter.notifyDataSetChanged()
     }
 
-    fun openWriteActivity(item : MemoListData?) {
+    fun openWriteActivity(item: MemoListData?) {
         val intent = Intent(this, MemoActivity::class.java)
         startActivityForResult(intent.apply {
             item?.let {
@@ -312,10 +329,11 @@ class MainActivity : AppCompatActivity(){
 
             if (resultCode == MEMO_RENAME) {
                 val memoKey = data.getStringExtra("KEY")
-                val memo = MemoListData(memoKey!!, date, title!!, text!! )
+                val memo = MemoListData(memoKey!!, date, title!!, text!!)
                 database.child("user").child(userKey!!).child("memo").child(memoKey).setValue(memo)
-            }else if(resultCode == MEMO_WRITE){
-                val memoKey = database.child("user/${model.userKey.get().toString()}/memo").push().key
+            } else if (resultCode == MEMO_WRITE) {
+                val memoKey =
+                    database.child("user/${model.userKey.get().toString()}/memo").push().key
                 if (memoKey == null) {
                     Log.w(tag, "Couldn't get push key for posts")
                     return
@@ -326,7 +344,7 @@ class MainActivity : AppCompatActivity(){
                 childUpdates["/user/$userKey/memo/$memoKey"] = memoValues
                 database.updateChildren(childUpdates)
             }
-        }else if(requestCode == 100){
+        } else if (requestCode == 100) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try { // 구글 로그인 성공
                 val account = task.getResult(ApiException::class.java)
@@ -336,12 +354,14 @@ class MainActivity : AppCompatActivity(){
         }
 
         super.onActivityResult(requestCode, resultCode, data)
+
     }
 
     private fun fireBaseAuthWithGoogle(acct: GoogleSignInAccount) {
         val credential = GoogleAuthProvider.getCredential(acct.idToken, null)
         auth.signInWithCredential(credential)
-            .addOnCompleteListener(this
+            .addOnCompleteListener(
+                this
             ) { task ->
                 if (task.isSuccessful) { // 로그인 성공
                     Toast.makeText(
@@ -351,13 +371,16 @@ class MainActivity : AppCompatActivity(){
                     ).show()
                     setUserInfo()
                 } else { // 로그인 실패
-                    Toast.makeText(this@MainActivity, R.string.action_sign_in_fail, Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(
+                        this@MainActivity,
+                        R.string.action_sign_in_fail,
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
     }
 
-    private fun setUserInfo(){
+    private fun setUserInfo() {
         val currentUser = auth.currentUser
         if (currentUser != null) {
             model.email.set(currentUser.email)
@@ -369,16 +392,17 @@ class MainActivity : AppCompatActivity(){
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                     dataSnapshot.child("user").let {
 
-                        if(!model.userKey.get().isNullOrEmpty()) return
+                        if (!model.userKey.get().isNullOrEmpty()) return
 
-                        it.children.forEach {now ->
-                            if(currentUser.uid == now.child("uid").value){
+                        it.children.forEach { now ->
+                            if (currentUser.uid == now.child("uid").value) {
                                 model.userKey.set(now.key)
                                 //loading start
 //                                textCenter.text = getString(R.string.text_memo_loading)
                                 textCenter.text = getString(R.string.text_new_memo)
                                 Log.d(tag, "set listener")
-                                database.child("user").child(now.key!!).child("memo").addChildEventListener(memoListener)
+                                database.child("user").child(now.key!!).child("memo")
+                                    .addChildEventListener(memoListener)
                                 return
                             }
                         }
@@ -390,7 +414,8 @@ class MainActivity : AppCompatActivity(){
                         }
 
                         model.userKey.set(key)
-                        database.child("user").child(key).child("memo").addChildEventListener(memoListener)
+                        database.child("user").child(key).child("memo")
+                            .addChildEventListener(memoListener)
                         val user = User(currentUser.email, currentUser.uid) //신규 유저 추가
                         val userValues = user.toMap()
                         val childUpdates = HashMap<String, Any>()
@@ -421,7 +446,7 @@ class MainActivity : AppCompatActivity(){
         database.orderByChild("user").apply {
             removeEventListener(listener)
         }
-        model.userKey.get()?.let{
+        model.userKey.get()?.let {
             database.child("user").child(it).child("memo").removeEventListener(memoListener)
         }
         super.onDestroy()
