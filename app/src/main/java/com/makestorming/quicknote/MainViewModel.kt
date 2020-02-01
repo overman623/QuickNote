@@ -18,6 +18,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     var email : ObservableField<String> = ObservableField()
     var uid : ObservableField<String> = ObservableField()
     var verified : ObservableBoolean = ObservableBoolean() //로그인 성공여부를 알려주는 변수
+    var deleteMode : ObservableBoolean = ObservableBoolean(false) //로그인 성공여부를 알려주는 변수
     var listNum : ObservableInt = ObservableInt(0)
     private var selected: MutableLiveData<MemoListData> = MutableLiveData()
     private var mAdapter: MemoListAdapter
@@ -52,6 +53,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun removeItem(memoListData: MemoListData) {
         list.remove(MemoListData(memoListData.key, memoListData.date, memoListData.title, memoListData.text))
+        mAdapter.notifyDataSetChanged()
+    }
+
+    fun sortItem(isReverse: Boolean){
+        list.sortWith(Comparator { t1, t2 ->
+            val date: Long = t1.date
+            val date1: Long = t2.date
+            if (isReverse) {
+                date.compareTo(date1)
+            } else {
+                date1.compareTo(date)
+            }
+        })
         mAdapter.notifyDataSetChanged()
     }
 

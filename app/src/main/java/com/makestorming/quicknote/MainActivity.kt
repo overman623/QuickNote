@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private val tag: String = MainActivity::class.java.simpleName
     //    private val model: MainViewModel = MainViewModel()
     private lateinit var model: MainViewModel
-    private lateinit var mAdapter: MemoListAdapter
+//    private lateinit var mAdapter: MemoListAdapter
 
     private lateinit var database: DatabaseReference // ...
     private lateinit var auth: FirebaseAuth // ...
@@ -123,13 +123,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }//개별적으로 바인딩해서 처리함.
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         model = ViewModelProviders.of(this).get(MainViewModel::class.java)
         model.getSelected().observe(this, androidx.lifecycle.Observer {
             openWriteActivity(it)
         })
+
 /*        mAdapter = MemoListAdapter(model.list, object : MemoListAdapter.Callback {
             override fun getAction(item: MemoListData?, index: Int) {
                 model.position.set(index)
@@ -170,7 +170,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun signOut() {
-        textCenter.text = ""
+        textCenter.text = "" //databinding으로 처리 예정.
         database.orderByChild("user").removeEventListener(listener)
         model.userKey.get()?.let {
             database.child("user").child(it).child("memo").removeEventListener(memoListener)
@@ -192,9 +192,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     override fun onBackPressed() {
-        if (mAdapter.deleteMode) {
-            mAdapter.deleteMode = false
-            mAdapter.notifyDataSetChanged()
+        if (model.deleteMode.get()) {
+            model.deleteMode.set(false)
+//            mAdapter.notifyDataSetChanged()
             fab.setImageResource(android.R.drawable.ic_menu_edit) //verfied 변수를 databinding하여 처리
             fab.setOnClickListener(clickListener)//verfied 변수를 databinding하여 처리
             invalidateOptionsMenu()
@@ -206,7 +206,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         if (model.verified.get()) {
-            if (mAdapter.deleteMode) {
+            if (model.deleteMode.get()) {
                 menuInflater.inflate(R.menu.menu_main_delete, menu)
             } else {
                 menuInflater.inflate(R.menu.menu_main, menu)
@@ -239,11 +239,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 true
             }
             R.id.action_sort_by_date -> {
-                sortMemoDate(false)
+                model.sortItem(false)
                 true
             }
             R.id.action_sort_by_date_reverse -> {
-                sortMemoDate(true)
+                model.sortItem(true)
                 true
             }
             R.id.action_sign_out -> {
@@ -258,7 +258,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private fun deleteMemo() {
         fab.setImageResource(android.R.drawable.ic_menu_delete)
         fab.setOnClickListener {
-            if (mAdapter.setData.size == 0) {
+            if (model.getAdapter().setData.size == 0) {
                 Toast.makeText(this@MainActivity, R.string.text_delete_none, Toast.LENGTH_SHORT)
                     .show()
             } else {
@@ -267,11 +267,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 alertDialog.setMessage(
                     String.format(
                         getString(R.string.dialog_text_delete_message),
-                        mAdapter.setData.size
+                        model.getAdapter().setData.size
                     )
                 )
                 alertDialog.setPositiveButton(R.string.dialog_text_delete_ok) { _, _ ->
-                    mAdapter.setData.forEach {
+                    model.getAdapter().setData.forEach {
                         database.child("user").child(model.userKey.get().toString()).child("memo")
                             .child(it.key).ref.removeValue()
                     }
@@ -281,26 +281,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 }
                 alertDialog.setNegativeButton(R.string.dialog_text_delete_cancel) { _, _ ->
                     onBackPressed()
-                    mAdapter.notifyDataSetChanged()
+//                    mAdapter.notifyDataSetChanged()
                 }
                 alertDialog.show()
             }
 
         }
-        mAdapter.deleteMode = true
-    }
-
-    private fun sortMemoDate(isReverse: Boolean) {
-        model.list.sortWith(Comparator { t1, t2 ->
-            val date: Long = t1.date
-            val date1: Long = t2.date
-            if (isReverse) {
-                date.compareTo(date1)
-            } else {
-                date1.compareTo(date)
-            }
-        })
-        mAdapter.notifyDataSetChanged()
+        model.deleteMode.set(true)
     }
 
     fun openWriteActivity(item: MemoListData?) {
