@@ -5,7 +5,10 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.layout_text_item.view.*
 
-class MemoListAdapter(items: MutableList<MemoListData>, private val connector: Callback ) : RecyclerView.Adapter<MainViewHolder>(){
+class MemoListAdapter(
+    items: MutableList<MemoListData>,
+    private val viewModel: MainViewModel
+) : RecyclerView.Adapter<MainViewHolder>(){
 
     private val tag = MemoListAdapter::class.java.simpleName
     private var items : MutableList<MemoListData>? = items
@@ -16,9 +19,9 @@ class MemoListAdapter(items: MutableList<MemoListData>, private val connector: C
 
     override fun getItemCount(): Int = items!!.size
 
-    interface Callback{
-        fun getAction(item : MemoListData?, index : Int)
-    }
+//    interface Callback{
+//        fun getAction(item : MemoListData?, index : Int)
+//    }
 
     override fun onBindViewHolder(holder: MainViewHolder, position: Int) {
         items?.get(position).let { item ->
@@ -40,7 +43,8 @@ class MemoListAdapter(items: MutableList<MemoListData>, private val connector: C
                             setData.remove(item)
                         }
                     }else{
-                        connector.getAction(item, position)
+//                        connector.getAction(item, position)
+                        viewModel.getAction(item, position)
                     }
 
                 }

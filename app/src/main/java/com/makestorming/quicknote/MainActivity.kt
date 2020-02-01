@@ -10,9 +10,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -29,9 +27,9 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import java.util.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), View.OnClickListener {
     private val tag: String = MainActivity::class.java.simpleName
-//    private val model: MainViewModel = MainViewModel()
+    //    private val model: MainViewModel = MainViewModel()
     private lateinit var model: MainViewModel
     private lateinit var mAdapter: MemoListAdapter
 
@@ -39,7 +37,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth // ...
     lateinit var googleSignInClient: GoogleSignInClient //구글 로그인을 관리하는 클래스
     private lateinit var listener: ValueEventListener
-    var num :Int = 0
+//    var num :Int = 0
 
     private val memoListener: ChildEventListener = object : ChildEventListener {
 
@@ -53,17 +51,16 @@ class MainActivity : AppCompatActivity() {
 
         override fun onChildChanged(p0: DataSnapshot, p1: String?) { //갱신된 데이터가 온다.
 
-            model.list[model.position.get()].let {
-                it.key = p0.key.toString()
-                it.title = p0.child("title").value.toString()
-                it.text = p0.child("text").value.toString()
-                it.date = p0.child("date").value as Long
-            }
-            mAdapter.notifyDataSetChanged()
+            model.changeItem(
+                MemoListData(
+                    p0.key.toString(),
+                    p0.child("date").value as Long,
+                    p0.child("title").value.toString(),
+                    p0.child("text").value.toString()
+                )
+            )
 
         }
-
-
 
         override fun onChildAdded(p0: DataSnapshot, p1: String?) {
 
@@ -75,38 +72,40 @@ class MainActivity : AppCompatActivity() {
                 val text = it.child("text").value.toString()
                 val date = it.child("date").value as Long
 
-                if (num > model.list.size) num = 0
+//                if (num > model.list.size) num = 0
 
-                model.list.add(
-                    num++, MemoListData(memoKey, date, title, text)
-                )
-                model.listNum.set(num)
-                mAdapter.notifyDataSetChanged()
+                model.addItem(MemoListData(memoKey, date, title, text))
 
-                if (model.list.size == 0) {
+//                model.list.add(
+//                    num++, MemoListData(memoKey, date, title, text)
+//                )
+//                model.listNum.set(num)
+
+
+/*                if (model.list.size == 0) {
                     textCenter.text = getString(R.string.text_new_memo)
                 } else {
                     textCenter.text = ""
-                }
+                }*///databind으로 처리함.
             }
 
         }
 
         override fun onChildRemoved(p0: DataSnapshot) {
-            p0.let {
-                val memoKey = it.key.toString()
-                val title = it.child("title").value.toString()
-                val text = it.child("text").value.toString()
-                val date = it.child("date").value as Long
-                model.list.remove(MemoListData(memoKey, date, title, text))
-            }
-            mAdapter.notifyDataSetChanged()
+            model.removeItem(
+                MemoListData(
+                    p0.key.toString(),
+                    p0.child("date").value as Long,
+                    p0.child("title").value.toString(),
+                    p0.child("text").value.toString()
+                )
+            )
 
-            if (model.list.size == 0) {
+/*            if (model.list.size == 0) {
                 textCenter.text = getString(R.string.text_new_memo)
             } else {
                 textCenter.text = ""
-            }
+            }*///databinding으로 처리함.
         }
     }
 
@@ -122,35 +121,33 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-    }
+    }//개별적으로 바인딩해서 처리함.
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        model = ViewModelProviders.of(this@MainActivity).get(MainViewModel::class.java)
-//        model = MainViewModel()
-        mAdapter = MemoListAdapter(model.list, object : MemoListAdapter.Callback {
+        model = ViewModelProviders.of(this).get(MainViewModel::class.java)
+        model.getSelected().observe(this, androidx.lifecycle.Observer {
+            openWriteActivity(it)
+        })
+/*        mAdapter = MemoListAdapter(model.list, object : MemoListAdapter.Callback {
             override fun getAction(item: MemoListData?, index: Int) {
                 model.position.set(index)
                 openWriteActivity(item)
             }
-        })
+        })*/
 
         val binding: ActivityMainBinding =
             DataBindingUtil.setContentView(this, R.layout.activity_main)
-
 
         binding.vm = model
         binding.lifecycleOwner = this
 
         setSupportActionBar(toolbar)
         textViewList.apply {
-            adapter = mAdapter
-            layoutManager = LinearLayoutManager(this@MainActivity)
-            setHasFixedSize(true)
+            //            adapter = mAdapter
         }
-        num = model.listNum.get()
-
+//        num = model.listNum.get()
 
         auth = FirebaseAuth.getInstance()
         GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -186,7 +183,8 @@ class MainActivity : AppCompatActivity() {
             model.email.set(null)
             model.userKey.set(null)
             model.uid.set(null)
-            model.position.set(0)
+//            model.position.set(0)
+            model.position.value = 0
             model.listNum.set(0)
             model.list.clear()
             model.verified.set(false)
@@ -197,8 +195,8 @@ class MainActivity : AppCompatActivity() {
         if (mAdapter.deleteMode) {
             mAdapter.deleteMode = false
             mAdapter.notifyDataSetChanged()
-            fab.setImageResource(android.R.drawable.ic_menu_edit)
-            fab.setOnClickListener(clickListener)
+            fab.setImageResource(android.R.drawable.ic_menu_edit) //verfied 변수를 databinding하여 처리
+            fab.setOnClickListener(clickListener)//verfied 변수를 databinding하여 처리
             invalidateOptionsMenu()
         } else {
             super.onBackPressed()
@@ -314,6 +312,7 @@ class MainActivity : AppCompatActivity() {
                 putExtra("TEXT", it.text)
             }
         }, MEMO)
+
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -450,6 +449,10 @@ class MainActivity : AppCompatActivity() {
             database.child("user").child(it).child("memo").removeEventListener(memoListener)
         }
         super.onDestroy()
+    }
+
+    override fun onClick(p0: View?) {
+
     }
 
 }
