@@ -1,8 +1,8 @@
 package com.makestorming.quicknote
 
 import android.app.Application
-import android.content.Intent
-import androidx.core.app.ActivityCompat.startActivityForResult
+import android.os.SystemClock
+import android.view.View
 import androidx.databinding.ObservableArrayList
 import androidx.databinding.ObservableBoolean
 import androidx.databinding.ObservableField
@@ -22,6 +22,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     var listNum : ObservableInt = ObservableInt(0)
     private var selected: MutableLiveData<MemoListData> = MutableLiveData()
     private var mAdapter: MemoListAdapter
+
+    private var mLastClickTime: Long = 0
+
+//    private val repository: Repository = Repository(application)
 
     init {
         mAdapter = MemoListAdapter(list, this)
@@ -73,10 +77,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         list.add(memoListData)
     }
 
-    fun auth(){
-
-    }
-
     fun getAction(item: MemoListData?, position: Int) {
         //리스트의 아이템을 클릭했을때만 이 메소드가 실행되게 하면됨.
         //삭제 모드라면 다른 메소드를 클릭하도록 유도함.
@@ -84,5 +84,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         selected.value = item
     }
 
+    fun fabClick(v: View?) { //매개변수를 없애는것도 고려함.
+
+        val currentClickTime = SystemClock.uptimeMillis()
+        val elapsedTime = currentClickTime - mLastClickTime
+        mLastClickTime = currentClickTime
+        if (elapsedTime <= 1000) {
+            return
+        }
+        mLastClickTime = 0
+        //기능 실행.
+    }
+
+    fun onClick2(v: View?) {
+        val currentClickTime = SystemClock.uptimeMillis()
+        val elapsedTime = currentClickTime - mLastClickTime
+        mLastClickTime = currentClickTime
+        if (elapsedTime <= 1000) {
+            return
+        }
+        mLastClickTime = 0
+    }
+
+    fun sign(){
+
+    }
 
 }

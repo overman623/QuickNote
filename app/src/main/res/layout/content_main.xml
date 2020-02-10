@@ -30,7 +30,10 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/textViewList"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:setAdapter="@{vm.getAdapter()}"
+        />
 
     <TextView
         android:id="@+id/text_message_login"

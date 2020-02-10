@@ -7,6 +7,9 @@
     >
     <data>
         <import type="android.view.View"/>
+        <variable
+            name="view"
+            type="android.view.View" />
         <variable name="vm"
             type="com.makestorming.quicknote.MainViewModel">
         </variable>
@@ -45,5 +48,6 @@
         android:visibility="@{vm.verified ? View.VISIBLE : View.GONE}"
         />
 
+<!--    android:onClick="@{() -> vm.fabClick(view)}"-->
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

@@ -2,6 +2,7 @@ package com.makestorming.quicknote
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.SystemClock
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -144,9 +145,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         binding.lifecycleOwner = this
 
         setSupportActionBar(toolbar)
-        textViewList.apply {
+//        textViewList.apply {
             //            adapter = mAdapter
-        }
+//        }
 //        num = model.listNum.get()
 
         auth = FirebaseAuth.getInstance()
@@ -157,12 +158,29 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 googleSignInClient = GoogleSignIn.getClient(this, it)
             }
 
-        buttonGoogle.setOnClickListener(clickListener)
-        fab.setOnClickListener(clickListener)
+        buttonGoogle.setOnClickListener(clickListener) //databinding으로 처리
+        fab.setOnClickListener(clickListener) //databinding으로 처리
 
         database = FirebaseDatabase.getInstance().reference
 
     }
+
+    fun onClick2(v: View?) {
+        var mLastClickTime: Long = 0
+
+        fun inner(){
+            val currentClickTime = SystemClock.uptimeMillis()
+            val elapsedTime = currentClickTime - mLastClickTime
+            mLastClickTime = currentClickTime
+            if (elapsedTime <= 1000) {
+                return
+            }
+            Log.d("Test","Clicked")
+        }
+        inner()
+    }
+
+
 
     public override fun onStart() { //유저의 정보가 없다면 다이얼로그 창을 띄워서 로그인을 유도한다.
         super.onStart()
