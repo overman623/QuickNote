@@ -8,7 +8,11 @@ import androidx.databinding.ObservableBoolean
 import androidx.databinding.ObservableField
 import androidx.databinding.ObservableInt
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.google.firebase.auth.AuthCredential
+import com.makestorming.quicknote.database.User
+
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -24,8 +28,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var mAdapter: MemoListAdapter
 
     private var mLastClickTime: Long = 0
-
-//    private val repository: Repository = Repository(application)
+    var authenticatedUserLiveData: LiveData<User>? = null
+    private val repository: Repository = Repository(application)
 
     init {
         mAdapter = MemoListAdapter(list, this)
@@ -108,6 +112,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun sign(){
 
+    }
+
+    fun signInWithGoogle(googleAuthCredential: AuthCredential) {
+        authenticatedUserLiveData = repository.firebaseSignInWithGoogle(googleAuthCredential)
     }
 
 }

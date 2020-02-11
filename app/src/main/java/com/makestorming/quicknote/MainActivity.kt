@@ -12,12 +12,14 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.Observer
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.*
@@ -127,7 +129,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         model = ViewModelProviders.of(this).get(MainViewModel::class.java)
-        model.getSelected().observe(this, androidx.lifecycle.Observer {
+        model.getSelected().observe(this, Observer {
             openWriteActivity(it)
         })
 
@@ -352,7 +354,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try { // 구글 로그인 성공
                 val account = task.getResult(ApiException::class.java)
-                fireBaseAuthWithGoogle(account!!)
+                if(account != null){
+                    fireBaseAuthWithGoogle(account)
+                }
             } catch (e: ApiException) {
             }
         }
@@ -382,7 +386,33 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     ).show()
                 }
             }
+
+//    signInWithGoogleAuthCredential(googleAuthCredential)
     }
+
+    fun signInWithGoogleAuthCredential(googleAuthCredential : AuthCredential) {
+        model.signInWithGoogle(googleAuthCredential)
+        model.authenticatedUserLiveData!!.observe(this, Observer {
+            if(it.isNew){
+                createNewUser(authenticatedUser)
+            }else{
+                goToMainActivity(authenticatedUser)
+            }
+        })
+
+    }
+
+
+    fun createNewUser(authenticatedUser:User) {
+        model.createUser(authenticatedUser)
+        model.createdUserLiveData.observe(this, Observer<User> {
+            if (user.isCreated) {
+//            toastMessage(user.name)
+            }
+//        goToMainActivity(user)
+        })
+    }
+
 
     private fun setUserInfo() {
         val currentUser = auth.currentUser

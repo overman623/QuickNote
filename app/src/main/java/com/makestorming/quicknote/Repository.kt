@@ -25,10 +25,10 @@ class Repository(application: Application) {
                         val uid = firebaseUser.uid
                         val name = firebaseUser.displayName
                         val email = firebaseUser.email
-//                        val user =
+                        val user = null
 //                            User(uid, name, email)
 //                        user.isNew = isNewUser
-//                        authenticatedUserMutableLiveData.setValue(user)
+                        authenticatedUserMutableLiveData.setValue(user)
                     }
                 } else {
 //                    logErrorMessage(authTask.exception!!.message)
