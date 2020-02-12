@@ -24,7 +24,7 @@ class Repository(application: Application) {
                     if (firebaseUser != null) {
                         val uid = firebaseUser.uid
                         val name = firebaseUser.displayName
-                        val email = firebaseUser.email
+                        val email = firebaseUser.email //유저 정보를 입력하게됨.
                         val user = null
 //                            User(uid, name, email)
 //                        user.isNew = isNewUser

@@ -360,14 +360,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             } catch (e: ApiException) {
             }
         }
-
         super.onActivityResult(requestCode, resultCode, data)
-
     }
 
     private fun fireBaseAuthWithGoogle(acct: GoogleSignInAccount) {
         val credential = GoogleAuthProvider.getCredential(acct.idToken, null)
-        auth.signInWithCredential(credential)
+        /*auth.signInWithCredential(credential)
             .addOnCompleteListener(
                 this
             ) { task ->
@@ -385,9 +383,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         Toast.LENGTH_SHORT
                     ).show()
                 }
-            }
-
-//    signInWithGoogleAuthCredential(googleAuthCredential)
+            }*/
+        signInWithGoogleAuthCredential(credential)
     }
 
     fun signInWithGoogleAuthCredential(googleAuthCredential : AuthCredential) {
