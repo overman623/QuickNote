@@ -1,8 +1,7 @@
-package com.makestorming.quicknote.Splash
+package com.makestorming.quicknote.splash
 
 import androidx.lifecycle.MutableLiveData
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.FirebaseDatabase
 import com.makestorming.quicknote.database.User
 
@@ -10,7 +9,7 @@ import com.makestorming.quicknote.database.User
 class SplashRepository {
 
     private val firebaseAuth = FirebaseAuth.getInstance()
-    private val user : User = User() //빈 생성자가 되어야함.
+    private val user : User = User("", "", null, false) //빈 생성자가 되어야함.
     private val rootRef  = FirebaseDatabase.getInstance()
     private val usersRef = rootRef.reference
 
@@ -30,7 +29,7 @@ class SplashRepository {
 
     fun addUserToLiveData(uid : String) : MutableLiveData<User> { //추가된 유저의 정보가 반환되어야 할것 같음.
         val userMutableLiveData: MutableLiveData<User> = MutableLiveData()
-
+/*
         usersRef.document(uid).get().addOnCompleteListener(userTask -> {
             if (userTask.isSuccessful()) {
                 DocumentSnapshot document = userTask.getResult()
@@ -39,9 +38,9 @@ class SplashRepository {
                     userMutableLiveData.setValue(user)
                 }
             } else {
-                logErrorMessage(userTask.getException().getMessage())
+//                logErrorMessage(userTask.getException().getMessage())
             }
-        })
+        })*/
         return userMutableLiveData
     }
 }

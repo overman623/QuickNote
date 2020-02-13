@@ -1,7 +1,8 @@
+package com.makestorming.quicknote.splash
+
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
-import com.makestorming.quicknote.Splash.SplashRepository
 import com.makestorming.quicknote.database.User
 
 

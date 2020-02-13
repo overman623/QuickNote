@@ -384,9 +384,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     ).show()
                 }
             }*/
-        signInWithGoogleAuthCredential(credential)
+//        signInWithGoogleAuthCredential(credential)
     }
-
+/*
     fun signInWithGoogleAuthCredential(googleAuthCredential : AuthCredential) {
         model.signInWithGoogle(googleAuthCredential)
         model.authenticatedUserLiveData!!.observe(this, Observer {
@@ -408,7 +408,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
 //        goToMainActivity(user)
         })
-    }
+    }*/
 
 
     private fun setUserInfo() {
@@ -447,10 +447,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         model.userKey.set(key)
                         database.child("user").child(key).child("memo")
                             .addChildEventListener(memoListener)
-                        val user = User(currentUser.email, currentUser.uid) //신규 유저 추가
-                        val userValues = user.toMap()
+//                        val user = User(currentUser.email, currentUser.uid) //신규 유저 추가
+//                        val userValues = user.toMap()
                         val childUpdates = HashMap<String, Any>()
-                        childUpdates["/user/$key"] = userValues
+//                        childUpdates["/user/$key"] = userValues
                         database.updateChildren(childUpdates)
                     }
                 }
