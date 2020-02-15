@@ -1,21 +1,25 @@
 package com.makestorming.quicknote.splash
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.makestorming.quicknote.database.User
 
 
 class SplashViewModel(application: Application) : AndroidViewModel(application) {
     private var splashRepository: SplashRepository = SplashRepository()
-    var isUserAuthenticatedLiveData: LiveData<User>? = null
-    var userLiveData: LiveData<User>? = null
+//    var isUserAuthenticatedLiveData: MutableLiveData<User>? = null
+    var isUserAuthenticatedLiveData: MutableLiveData<User> = MutableLiveData()
+    var userLiveData: MutableLiveData<User> = MutableLiveData()
 
     fun checkIfUserIsAuthenticated() {
-        isUserAuthenticatedLiveData = splashRepository.checkIfUserIsAuthenticatedInFirebase()
+        Log.d("test" , "=====================checkIfUserIsAuthenticated model=====================")
+        isUserAuthenticatedLiveData.value = splashRepository.checkIfUserIsAuthenticatedInFirebase()
     }
 
     fun setUid(uid: String) {
-        userLiveData = splashRepository.addUserToLiveData(uid)
+        userLiveData.value = splashRepository.addUserToLiveData(uid)
     }
 }

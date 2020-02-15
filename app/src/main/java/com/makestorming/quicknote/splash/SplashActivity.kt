@@ -2,6 +2,7 @@ package com.makestorming.quicknote.splash
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
@@ -17,25 +18,21 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_splash)
         initSplashViewModel()
-//        checkIfUserIsAuthenticated()
+        checkIfUserIsAuthenticated()
     }
 
     private fun initSplashViewModel() {
         splashViewModel = ViewModelProviders.of(this).get(SplashViewModel::class.java)
-
-//        val binding: ActivitySplashBinding =
-//            DataBindingUtil.setContentView(this, R.layout.activity_splash)
-
     }
 
-    private fun checkIfUserIsAuthenticated(){
+    private fun checkIfUserIsAuthenticated() {
+        Log.d("test", "=====================checkIfUserIsAuthenticated=====================")
         splashViewModel.checkIfUserIsAuthenticated()
-        splashViewModel.isUserAuthenticatedLiveData?.observe(this, Observer<User>{
+        splashViewModel.isUserAuthenticatedLiveData?.observe(this, Observer<User> {
             if (!it.isAuthenticated) { //인증 되지 않았을때.
                 goToAuthInActivity()
-                finish()
+//                finish()
             } else { //인증 되었을때.
                 getUserFromDatabase(it.uid)
             }
@@ -43,22 +40,26 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun goToAuthInActivity() {
+        Log.d("test", "=====================goToAuthInActivity=====================")
 //        val intent = Intent(this@SplashActivity, AuthActivity::class.java)
 //        startActivity(intent)
     }
 
-    private fun getUserFromDatabase(uid : String) {
+    private fun getUserFromDatabase(uid: String) {
+        Log.d("test", "=====================getUserFromDatabase=====================")
         splashViewModel.setUid(uid)
-        splashViewModel.userLiveData?.observe(this, Observer<User>{
-            goToMainActivity(it)
-            finish()
+        splashViewModel.userLiveData.observe(this, Observer<User> {
+            Log.d("test", "=====================Observer=====================")
+            goToMainActivity(it) //it is null
+//            finish()
         })
     }
 
     private fun goToMainActivity(user: User) {
-        val intent = Intent(this@SplashActivity, MainActivity::class.java)
+        Log.d("test", "=====================goToMainActivity=====================")
+//        val intent = Intent(this@SplashActivity, MainActivity::class.java)
 //        intent.putExtra(USER, user)
-        startActivity(intent)
+//        startActivity(intent)
     }
 
 }
