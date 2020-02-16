@@ -3,6 +3,7 @@ package com.makestorming.quicknote.database
 import com.google.firebase.database.Exclude
 import com.google.firebase.database.IgnoreExtraProperties
 import com.makestorming.quicknote.MemoListData
+import java.io.Serializable
 
 @IgnoreExtraProperties
 data class User(

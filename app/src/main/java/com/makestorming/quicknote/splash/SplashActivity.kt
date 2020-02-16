@@ -4,11 +4,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import com.makestorming.quicknote.MainActivity
-import com.makestorming.quicknote.R
+import com.makestorming.quicknote.auth.AuthActivity
 import com.makestorming.quicknote.database.User
 
 
@@ -32,7 +30,7 @@ class SplashActivity : AppCompatActivity() {
         splashViewModel.isUserAuthenticatedLiveData?.observe(this, Observer<User> {
             if (!it.isAuthenticated) { //인증 되지 않았을때.
                 goToAuthInActivity()
-//                finish()
+                finish()
             } else { //인증 되었을때.
                 getUserFromDatabase(it.uid)
             }
@@ -41,8 +39,8 @@ class SplashActivity : AppCompatActivity() {
 
     private fun goToAuthInActivity() {
         Log.d("test", "=====================goToAuthInActivity=====================")
-//        val intent = Intent(this@SplashActivity, AuthActivity::class.java)
-//        startActivity(intent)
+        val intent = Intent(this@SplashActivity, AuthActivity::class.java)
+        startActivity(intent)
     }
 
     private fun getUserFromDatabase(uid: String) {
@@ -51,7 +49,7 @@ class SplashActivity : AppCompatActivity() {
         splashViewModel.userLiveData.observe(this, Observer<User> {
             Log.d("test", "=====================Observer=====================")
             goToMainActivity(it) //it is null
-//            finish()
+            finish()
         })
     }
 
